@@ -155,7 +155,7 @@ select,input{
 
 </style>
 </head>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <body>
 
 <!-- FILTER -->
@@ -295,7 +295,7 @@ select,input{
     <div class="kpiTitle" style="font-weight:600;">Hourly Downtime Heatmap</div>
     <div class="sub">Identify peak failure times</div>
 
-    <canvas id="heatmapChart" style="margin-top:15px;"></canvas>
+    <div id="heatmapChart"></div>
 
   </div>
 
@@ -408,14 +408,17 @@ async function generate(){
 renderHeatmap(raw);
 }
 
-  function renderGantt(data){
+function renderGantt(data){
 
   const container = document.getElementById("ganttContainer");
   container.innerHTML = "";
 
+  const timeline = document.createElement("div");
+  timeline.className = "timeline";
+
   const events = data.Downtime_Duration || [];
 
-  events.forEach((e,i)=>{
+  events.forEach(e=>{
 
     const durationMin = Number(e.value)/60;
 
@@ -425,27 +428,29 @@ renderHeatmap(raw);
     const left = (minutes / 1440) * 100;
     const width = (durationMin / 1440) * 100;
 
-    const row = document.createElement("div");
-    row.className = "ganttRow";
+    const bar = document.createElement("div");
+    bar.className = "bar critical";
 
-    row.innerHTML = `
-      <div class="machineLabel">Event ${i+1}</div>
-      <div class="timeline">
-        <div class="bar critical"
-             style="left:${left}%; width:${width}%;">
-             ${durationMin.toFixed(0)}m
-        </div>
-      </div>
-    `;
+    bar.style.left = left + "%";
+    bar.style.width = width + "%";
 
-    container.appendChild(row);
+    bar.innerText = durationMin.toFixed(0)+"m";
+
+    timeline.appendChild(bar);
 
   });
 
+  container.appendChild(timeline);
 }
-  function renderHeatmap(data){
+ function renderHeatmap(data){
 
-  const ctx = document.getElementById("heatmapChart");
+  const container = document.getElementById("heatmapChart");
+  container.innerHTML = "";
+
+  let grid = document.createElement("div");
+  grid.style.display = "grid";
+  grid.style.gridTemplateColumns = "repeat(24, 1fr)";
+  grid.style.gap = "4px";
 
   let hourly = new Array(24).fill(0);
 
@@ -455,23 +460,21 @@ renderHeatmap(raw);
     hourly[h] += Number(d.value)/60;
   });
 
-  new Chart(ctx,{
-    type:"bar",
-    data:{
-      labels: [...Array(24).keys()],
-      datasets:[{
-        label:"Downtime (mins)",
-        data: hourly
-      }]
-    },
-    options:{
-      scales:{
-        x:{ title:{display:true,text:"Hour"} },
-        y:{ title:{display:true,text:"Minutes"} }
-      }
-    }
+  hourly.forEach(val=>{
+
+    const cell = document.createElement("div");
+
+    let intensity = Math.min(val / 60, 1); // normalize
+    let color = `rgba(239,68,68,${0.2 + intensity})`;
+
+    cell.style.height = "20px";
+    cell.style.borderRadius = "4px";
+    cell.style.background = color;
+
+    grid.appendChild(cell);
   });
 
+  container.appendChild(grid);
 }
 
 </script>
