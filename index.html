@@ -708,7 +708,8 @@ paretoInstance = new Chart(document.getElementById("paretoChart"),{
         data:values,
         backgroundColor:'#1e3a8a', // 🔵 dark blue
         borderRadius:6,           // 🔥 rounded top
-        borderSkipped:'bottom'
+        borderSkipped:'bottom',
+        order:2  
       },
       {
         type:'line',
@@ -717,7 +718,9 @@ paretoInstance = new Chart(document.getElementById("paretoChart"),{
         yAxisID:'y1',
         borderColor:'#ef4444',
         tension:0.4,              // 🔥 smooth curve
-        fill:false
+        fill:false,
+        order:1  
+        
       }
     ]
   },
@@ -766,7 +769,8 @@ lossInstance = new Chart(document.getElementById("lossChart"),{
         data:prod,
         backgroundColor:'#f97316', // 🟠 saffron
         borderRadius:6,
-        borderSkipped:'bottom'
+        borderSkipped:'bottom',
+        order:2  
       },
       {
         type:'line',
@@ -775,7 +779,8 @@ lossInstance = new Chart(document.getElementById("lossChart"),{
         yAxisID:'y1',
         borderColor:'#ef4444', // 🔴 red
         tension:0.4,
-        fill:false
+        fill:false,
+        order:1  
       }
     ]
   },
