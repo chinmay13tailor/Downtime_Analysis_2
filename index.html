@@ -11,29 +11,61 @@ body{
   padding:20px;
 }
 
-/* KPI CARD (same style as your UI) */
+/* KPI ROW */
 .kpiRow{
   display:grid;
   grid-template-columns:repeat(7,1fr);
   gap:12px;
 }
 
+/* CARD */
 .card{
   background:#fff;
   border-radius:12px;
-  padding:15px;
+  padding:16px;
   box-shadow:0 2px 6px rgba(0,0,0,0.08);
 }
 
+/* HEADER */
+.kpiHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+
+/* ICON */
+.icon{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-size:14px;
+}
+
+.icon.red{background:#ef4444}
+
+/* TREND */
+.trend{
+  font-size:12px;
+  font-weight:600;
+}
+
+.trend.green{color:#22c55e}
+
+/* TEXT */
 .kpiTitle{
   font-size:12px;
   color:#6b7280;
 }
 
 .kpiValue{
-  font-size:22px;
+  font-size:20px;
   font-weight:600;
-  margin-top:5px;
+  margin-top:4px;
 }
 
 .sub{
@@ -48,11 +80,20 @@ body{
 <!-- KPI ROW -->
 <div class="kpiRow">
 
-  <!-- ONLY FIRST CARD (FREEZE TARGET) -->
+  <!-- KPI 1: TOTAL DOWNTIME -->
   <div class="card">
+
+    <div class="kpiHeader">
+      <div class="icon red">⏱</div>
+      <div class="trend green">↑</div>
+    </div>
+
     <div class="kpiTitle">Total Downtime</div>
+
     <div class="kpiValue" id="kpi-total-downtime">-- mins</div>
-    <div class="sub">live</div>
+
+    <div class="sub">vs yesterday</div>
+
   </div>
 
 </div>
@@ -68,7 +109,7 @@ const JWT = new URLSearchParams(location.search).get("token");
 async function fetchData(){
 
   const now = Date.now();
-  const start = now - (24*60*60*1000); // last 24 hrs
+  const start = now - (24*60*60*1000);
 
   const url = `${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=Downtime_Start_Time,Downtime_End_Time,Downtime_Description,Downtime_Duration&startTs=${start}&endTs=${now}&limit=1000&agg=NONE`;
 
@@ -88,7 +129,6 @@ function merge(data){
 
   Object.keys(data).forEach(key=>{
     (data[key] || []).forEach(d=>{
-
       const ts = d.ts;
 
       if(!map.has(ts)){
@@ -106,7 +146,7 @@ function merge(data){
 function buildEvents(rows){
 
   return rows
-    .filter(r => r.Downtime_Duration) // only valid rows
+    .filter(r => r.Downtime_Duration)
     .map(r=>{
 
       const durationMin = Number(r.Downtime_Duration) / 60;
@@ -142,16 +182,8 @@ async function init(){
   }
 
   const raw = await fetchData();
-
-  console.log("RAW:", raw);
-
   const rows = merge(raw);
-
-  console.log("MERGED:", rows);
-
   const events = buildEvents(rows);
-
-  console.log("EVENTS:", events);
 
   renderTotalDowntime(events);
 }
