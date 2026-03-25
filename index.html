@@ -321,6 +321,21 @@ select,input{
   </div>
 
 </div>
+  <div style="display:flex; gap:20px; margin-top:30px;">
+
+  <!-- Pareto -->
+  <div class="card" style="flex:1; min-height:300px;">
+    <div class="kpiTitle" style="font-weight:600;">Downtime Reason Analysis (Pareto)</div>
+    <canvas id="paretoChart"></canvas>
+  </div>
+
+  <!-- Loss -->
+  <div class="card" style="flex:1; min-height:300px;">
+    <div class="kpiTitle" style="font-weight:600;">Reason-wise Loss Analysis</div>
+    <canvas id="lossChart"></canvas>
+  </div>
+
+</div>
 <script>
 
 // 🔹 SAME LOGIC (UNCHANGED)
@@ -359,7 +374,7 @@ function getRange(){
 }
 
 async function fetchData(startTs,endTs){
-  const res=await fetch(`${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=Downtime_Duration,Downtime_Description,Standard_Speed,Per_Min_Consumption&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`,{
+  const res=await fetch(`${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=Downtime_Start_Time,Downtime_End_Time,Downtime_Description,Standard_Speed,Per_Min_Consumption&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`,{
     headers:{"X-Authorization":`Bearer ${JWT}`}
   });
   return res.json();
@@ -436,6 +451,8 @@ const weekData = await fetchData(
 );
 
 renderHeatmap(weekData);
+renderPareto(raw);
+renderLossChart(raw);
 }
 function getWeekRange(){
 
@@ -609,7 +626,96 @@ axis.innerHTML = `
 
 container.appendChild(axis);
 }
+  function processReasonData(data){
 
+  const startArr = data.Downtime_Start_Time || [];
+  const endArr = data.Downtime_End_Time || [];
+  const reasons = data.Downtime_Description || [];
+
+  const speed = data.Standard_Speed || [];
+  const energy = data.Per_Min_Consumption || [];
+
+  // 🔥 maps (minute → value)
+  const speedMap = {};
+  speed.forEach(s=>{
+    speedMap[Math.floor(s.ts/60000)] = Number(s.value);
+  });
+
+  const energyMap = {};
+  energy.forEach(e=>{
+    energyMap[Math.floor(e.ts/60000)] = Number(e.value);
+  });
+
+  let result = {};
+
+  startArr.forEach((st,i)=>{
+
+    const start = new Date(st.value).getTime();
+    const end = new Date(endArr[i]?.value).getTime();
+
+    const reason = (reasons[i]?.value || "Unknown").trim();
+
+    if(!result[reason]){
+      result[reason] = { downtime:0, prod:0, energy:0 };
+    }
+
+    // 🔥 minute loop
+    for(let t=start; t<=end; t+=60000){
+
+      const key = Math.floor(t/60000);
+
+      const sp = speedMap[key] || 0;
+      const en = energyMap[key] || 0;
+
+      result[reason].prod += sp;
+      result[reason].energy += en;
+      result[reason].downtime += 1;
+
+    }
+
+  });
+
+  return result;
+}
+let paretoInstance = null;
+
+function renderPareto(data){
+
+  const map = processReasonData(data);
+
+  const sorted = Object.entries(map)
+    .sort((a,b)=>b[1].downtime - a[1].downtime);
+
+  const labels = sorted.map(x=>x[0]);
+  const values = sorted.map(x=>x[1].downtime);
+
+  const total = values.reduce((a,b)=>a+b,0);
+
+  let cum=[], sum=0;
+
+  values.forEach(v=>{
+    sum+=v;
+    cum.push((sum/total)*100);
+  });
+
+  if(paretoInstance) paretoInstance.destroy();
+
+  paretoInstance = new Chart(document.getElementById("paretoChart"),{
+    data:{
+      labels:labels,
+      datasets:[
+        {type:'bar', label:'Downtime (mins)', data:values},
+        {type:'line', label:'Cumulative %', data:cum, yAxisID:'y1'}
+      ]
+    },
+    options:{
+      scales:{
+        y:{title:{display:true,text:"Minutes"}},
+        y1:{position:'right', min:0, max:100}
+      }
+    }
+  });
+}
 </script>
 
 </body>
