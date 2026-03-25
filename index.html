@@ -21,9 +21,10 @@ body{
 .filters{
   display:flex;
   gap:10px;
+  align-items:center;
 }
 
-select{
+select, input{
   padding:8px 12px;
   border-radius:8px;
   border:1px solid #d1d5db;
@@ -36,6 +37,7 @@ select{
   padding:10px 16px;
   border-radius:8px;
   border:none;
+  cursor:pointer;
 }
 
 /* KPI */
@@ -52,30 +54,8 @@ select{
   box-shadow:0 6px 18px rgba(0,0,0,0.08);
 }
 
-.kpiHeader{
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:10px;
-}
-
-.icon{
-  width:36px;
-  height:36px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:#fff;
-}
-
-.red{background:#ef4444}
-.blue{background:#2563eb}
-.orange{background:#f59e0b}
-.green{background:#22c55e}
-
 .kpiTitle{font-size:12px;color:#6b7280}
 .kpiValue{font-size:22px;font-weight:700;margin-top:5px}
-.sub{font-size:11px;color:#9ca3af}
 </style>
 </head>
 
@@ -83,64 +63,31 @@ select{
 
 <!-- FILTER -->
 <div class="filterBar">
+
   <div class="filters">
-    <select><option>Today</option></select>
-    <select><option>All Shifts</option></select>
-    <select><option>All Machines</option></select>
-    <select><option>All Downtime Types</option></select>
+
+    <select id="dateType" onchange="handleDateType()">
+      <option value="today">Today</option>
+      <option value="yesterday">Yesterday</option>
+      <option value="custom">Custom</option>
+    </select>
+
+    <input type="date" id="customDate" style="display:none">
+
+    <button class="btn" onclick="generate()">Generate</button>
+
   </div>
+
   <button class="btn">+ Add Downtime</button>
+
 </div>
 
-<!-- KPI ROW -->
+<!-- KPI -->
 <div class="kpiRow">
 
   <div class="card">
-    <div class="kpiHeader"><div class="icon red">⏱</div></div>
     <div class="kpiTitle">Total Downtime</div>
     <div class="kpiValue" id="kpi-total">--</div>
-    <div class="sub">mins</div>
-  </div>
-
-  <div class="card">
-    <div class="kpiHeader"><div class="icon blue">%</div></div>
-    <div class="kpiTitle">Downtime %</div>
-    <div class="kpiValue" id="kpi-percent">--</div>
-    <div class="sub">%</div>
-  </div>
-
-  <div class="card">
-    <div class="kpiHeader"><div class="icon orange">⚙</div></div>
-    <div class="kpiTitle">Production Loss</div>
-    <div class="kpiValue" id="kpi-prod">--</div>
-    <div class="sub">nos</div>
-  </div>
-
-  <div class="card">
-    <div class="kpiHeader"><div class="icon orange">⚡</div></div>
-    <div class="kpiTitle">Energy Loss</div>
-    <div class="kpiValue" id="kpi-energy">--</div>
-    <div class="sub">kWh</div>
-  </div>
-
-  <div class="card">
-    <div class="kpiHeader"><div class="icon blue">i</div></div>
-    <div class="kpiTitle">Top Reason</div>
-    <div class="kpiValue" id="kpi-reason">--</div>
-  </div>
-
-  <div class="card">
-    <div class="kpiHeader"><div class="icon green">🔧</div></div>
-    <div class="kpiTitle">MTTR</div>
-    <div class="kpiValue" id="kpi-mttr">--</div>
-    <div class="sub">mins</div>
-  </div>
-
-  <div class="card">
-    <div class="kpiHeader"><div class="icon green">🔄</div></div>
-    <div class="kpiTitle">MTBF</div>
-    <div class="kpiValue" id="kpi-mtbf">--</div>
-    <div class="sub">mins</div>
   </div>
 
 </div>
@@ -152,20 +99,60 @@ const API = "https://plantwiz.pimateck.in/api";
 const DEVICE_ID = "991cf500-661a-11f0-90f1-775fee303094";
 const JWT = new URLSearchParams(location.search).get("token");
 
-// DATE RANGE (TODAY)
-function getTodayRange(){
-  const now = new Date();
-  const start = new Date();
-  start.setHours(0,0,0,0);
-  return {startTs:start.getTime(), endTs:now.getTime()};
+// HANDLE DATE TYPE
+function handleDateType(){
+  const type = document.getElementById("dateType").value;
+  document.getElementById("customDate").style.display =
+    type === "custom" ? "block" : "none";
+}
+
+// GET DATE RANGE
+function getRange(){
+
+  const type = document.getElementById("dateType").value;
+
+  let start, end;
+
+  if(type === "today"){
+    start = new Date();
+    start.setHours(0,0,0,0);
+    end = new Date();
+  }
+
+  else if(type === "yesterday"){
+    start = new Date();
+    start.setDate(start.getDate() - 1);
+    start.setHours(0,0,0,0);
+
+    end = new Date(start);
+    end.setHours(23,59,59,999);
+  }
+
+  else{
+    const val = document.getElementById("customDate").value;
+
+    if(!val){
+      alert("Select date");
+      return null;
+    }
+
+    start = new Date(val);
+    start.setHours(0,0,0,0);
+
+    end = new Date(val);
+    end.setHours(23,59,59,999);
+  }
+
+  return {
+    startTs: start.getTime(),
+    endTs: end.getTime()
+  };
 }
 
 // FETCH
-async function fetchData(){
+async function fetchData(startTs,endTs){
 
-  const {startTs,endTs} = getTodayRange();
-
-  const url = `${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=Downtime_Duration,Downtime_Description,Standard_Speed,Per_Min_Consumption&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`;
+  const url = `${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=Downtime_Duration&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`;
 
   const res = await fetch(url,{
     headers:{
@@ -176,82 +163,34 @@ async function fetchData(){
   return res.json();
 }
 
-// CALCULATION
-function calculateAll(data){
-
+// CALC
+function calc(data){
   let total = 0;
-  let prod = 0;
-  let energy = 0;
-  let count = 0;
-  let reasonMap = {};
-
-  const d = data.Downtime_Duration || [];
-  const r = data.Downtime_Description || [];
-  const s = data.Standard_Speed || [];
-  const e = data.Per_Min_Consumption || [];
-
-  d.forEach((val,i)=>{
-
-    const min = Number(val.value)/60;
-
-    total += min;
-    count++;
-
-    const speed = Number(s[i]?.value || 0);
-    const energyRate = Number(e[i]?.value || 0);
-    const reason = (r[i]?.value || "Unknown").trim();
-
-    prod += min * speed;
-    energy += min * energyRate;
-
-    reasonMap[reason] = (reasonMap[reason]||0) + min;
-
+  (data.Downtime_Duration || []).forEach(d=>{
+    total += Number(d.value)/60;
   });
-
-  const percent = (total / 1440) * 100;
-
-  const topReason = Object.keys(reasonMap)
-    .reduce((a,b)=> reasonMap[a] > reasonMap[b] ? a : b , "-");
-
-  const mttr = count ? total/count : 0;
-  const mtbf = count ? 1440/count : 0;
-
-  return {
-    total: total.toFixed(0),
-    percent: percent.toFixed(1),
-    prod: prod.toFixed(0),
-    energy: energy.toFixed(0),
-    topReason,
-    mttr: mttr.toFixed(1),
-    mtbf: mtbf.toFixed(0)
-  };
+  return total.toFixed(0);
 }
 
-// MAIN
-async function init(){
+// GENERATE
+async function generate(){
 
   if(!JWT){
     alert("Token missing");
     return;
   }
 
-  const raw = await fetchData();
+  const range = getRange();
+  if(!range) return;
+
+  const raw = await fetchData(range.startTs, range.endTs);
 
   console.log("RAW:", raw);
 
-  const kpi = calculateAll(raw);
+  const total = calc(raw);
 
-  document.getElementById("kpi-total").innerText = kpi.total;
-  document.getElementById("kpi-percent").innerText = kpi.percent;
-  document.getElementById("kpi-prod").innerText = kpi.prod;
-  document.getElementById("kpi-energy").innerText = kpi.energy;
-  document.getElementById("kpi-reason").innerText = kpi.topReason;
-  document.getElementById("kpi-mttr").innerText = kpi.mttr;
-  document.getElementById("kpi-mtbf").innerText = kpi.mtbf;
-
+  document.getElementById("kpi-total").innerText = total + " mins";
 }
-
-init();
 
 </script>
 
