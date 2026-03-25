@@ -312,7 +312,7 @@ select,input{
   </div>
 
   <!-- HEATMAP -->
-  <div class="card" style="width:50%; min-height:290px;">
+  <div class="card" style="flex:1; min-height:360px;">
     <div class="kpiTitle" style="font-weight:600;">Hourly Downtime Heatmap</div>
     <div class="sub">Identify peak failure times</div>
 
@@ -556,7 +556,8 @@ function renderHeatmap(data){
   const grid = document.createElement("div");
   grid.style.display = "grid";
   grid.style.gridTemplateColumns = "60px repeat(24, 1fr)";
-  grid.style.gap = "4px";
+  grid.style.gap = "8px";
+  grid.style.alignItems = "center";
 
   // initialize matrix
   let matrix = Array.from({length:7}, ()=>new Array(24).fill(0));
@@ -580,11 +581,14 @@ function renderHeatmap(data){
     // day label
     const label = document.createElement("div");
     label.innerText = dayName;
-    label.style.fontSize = "12px";
+    label.style.fontSize = "13px";
+    label.style.fontWeight = "500";
     label.style.display = "flex";
     label.style.alignItems = "center";
+    label.style.justifyContent = "flex-start";
 
     grid.appendChild(label);
+    grid.style.height = "100%";
 
     for(let h=0; h<24; h++){
 
@@ -595,10 +599,18 @@ function renderHeatmap(data){
       const max = Math.max(...matrix.flat(), 1);
       let intensity = val / max;
 
-      cell.style.height = "18px";
+      cell.style.height = "28px";
       cell.style.borderRadius = "4px";
       cell.style.border = "1px solid #f1f5f9";
       cell.style.background = `rgba(239,68,68,${0.15 + intensity*0.85})`;
+
+      cell.onmouseenter = () => {
+  cell.style.transform = "scale(1.1)";
+};
+cell.onmouseleave = () => {
+  cell.style.transform = "scale(1)";
+};
+cell.style.transition = "0.15s";
 
 // 🔥 TOOLTIP ADD
       cell.title = `${dayName} ${h}:00 - ${val.toFixed(1)} mins`;
