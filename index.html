@@ -114,21 +114,10 @@ select{
 <div class="filterBar">
 
   <div class="filters">
-    <select>
-      <option>Today</option>
-    </select>
-
-    <select>
-      <option>All Shifts</option>
-    </select>
-
-    <select>
-      <option>All Machines</option>
-    </select>
-
-    <select>
-      <option>All Downtime Types</option>
-    </select>
+    <select><option>Today</option></select>
+    <select><option>All Shifts</option></select>
+    <select><option>All Machines</option></select>
+    <select><option>All Downtime Types</option></select>
   </div>
 
   <button class="btn">+ Add Downtime</button>
@@ -158,18 +147,31 @@ select{
 
 <script>
 
-// CONFIG
+// ================= CONFIG =================
 const API = "https://plantwiz.pimateck.in/api";
 const DEVICE_ID = "991cf500-661a-11f0-90f1-775fee303094";
 const JWT = new URLSearchParams(location.search).get("token");
 
-// FETCH
+// ================= DATE RANGE (TODAY ONLY) =================
+function getTodayRange(){
+
+  const now = new Date();
+
+  const start = new Date();
+  start.setHours(0,0,0,0);
+
+  return {
+    startTs: start.getTime(),
+    endTs: now.getTime()
+  };
+}
+
+// ================= FETCH =================
 async function fetchData(){
 
-  const now = Date.now();
-  const start = now - (24*60*60*1000);
+  const {startTs, endTs} = getTodayRange();
 
-  const url = `${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=Downtime_Duration&startTs=${start}&endTs=${now}&limit=1000&agg=NONE`;
+  const url = `${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=Downtime_Duration&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`;
 
   const res = await fetch(url,{
     headers:{
@@ -180,29 +182,31 @@ async function fetchData(){
   return res.json();
 }
 
-// CALCULATE
-function calculateTotal(data){
+// ================= CALCULATION =================
+function calculateTotalDowntime(data){
 
   let total = 0;
 
   (data.Downtime_Duration || []).forEach(d=>{
-    total += Number(d.value)/60;
+    total += Number(d.value || 0) / 60;
   });
 
   return total.toFixed(0);
 }
 
-// MAIN
+// ================= MAIN =================
 async function init(){
 
   if(!JWT){
-    alert("Token missing");
+    alert("Token missing in URL");
     return;
   }
 
   const raw = await fetchData();
 
-  const total = calculateTotal(raw);
+  console.log("RAW DATA:", raw.Downtime_Duration);
+
+  const total = calculateTotalDowntime(raw);
 
   document.getElementById("kpi-total-downtime").innerText =
     total + " mins";
