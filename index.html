@@ -374,7 +374,7 @@ function getRange(){
 }
 
 async function fetchData(startTs,endTs){
-  const res=await fetch(`${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=Downtime_Start_Time,Downtime_End_Time,Downtime_Description,Standard_Speed,Per_Min_Consumption&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`,{
+  const res=await fetch(`${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=Downtime_Start_Time,Downtime_End_Time,Downtime_Description,Standard_Speed,Per_Min_Consumption,Downtime_Duration&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`,{
     headers:{"X-Authorization":`Bearer ${JWT}`}
   });
   return res.json();
