@@ -303,7 +303,7 @@ select,input{
 <div style="display:flex; gap:20px; margin-top:30px;">
 
   <!-- GANTT -->
-  <div class="card" style="width:55%;">
+  <div class="card" style="width:55%; min-height:260px;">
     <div class="kpiTitle" style="font-weight:600;">Downtime Timeline (Gantt)</div>
     <div class="sub">Machine-wise downtime visualization</div>
 
@@ -312,7 +312,7 @@ select,input{
   </div>
 
   <!-- HEATMAP -->
-  <div class="card" style="width:45%;">
+  <div class="card" style="width:45%; min-height:260px;">
     <div class="kpiTitle" style="font-weight:600;">Hourly Downtime Heatmap</div>
     <div class="sub">Identify peak failure times</div>
 
@@ -575,11 +575,16 @@ function renderHeatmap(data){
 
       const cell = document.createElement("div");
 
-      let intensity = Math.min(val / 60, 1);
+      const max = Math.max(...matrix.flat(), 1);
+      let intensity = val / max;
 
       cell.style.height = "18px";
       cell.style.borderRadius = "4px";
-      cell.style.background = `rgba(239,68,68,${0.15 + intensity})`;
+      cell.style.border = "1px solid #f1f5f9";
+      cell.style.background = `rgba(239,68,68,${0.15 + intensity*0.85})`;
+
+// 🔥 TOOLTIP ADD
+      cell.title = `${dayName} ${h}:00 - ${val.toFixed(1)} mins`;
 
       grid.appendChild(cell);
     }
@@ -587,6 +592,22 @@ function renderHeatmap(data){
   });
 
   container.appendChild(grid);
+  // 🔥 TIME AXIS
+const axis = document.createElement("div");
+axis.style.display = "grid";
+axis.style.gridTemplateColumns = "60px repeat(24,1fr)";
+axis.style.marginTop = "8px";
+
+axis.innerHTML = `
+  <div></div>
+  <div style="grid-column:1; font-size:11px;">00:00</div>
+  <div style="grid-column:7; font-size:11px;">06:00</div>
+  <div style="grid-column:13; font-size:11px;">12:00</div>
+  <div style="grid-column:19; font-size:11px;">18:00</div>
+  <div style="grid-column:25; font-size:11px;">24:00</div>
+`;
+
+container.appendChild(axis);
 }
 
 </script>
