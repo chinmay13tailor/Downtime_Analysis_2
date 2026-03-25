@@ -11,7 +11,6 @@ body{
   padding:20px;
 }
 
-/* FILTER BAR */
 .filterBar{
   display:flex;
   justify-content:space-between;
@@ -28,7 +27,6 @@ select, input{
   padding:8px 12px;
   border-radius:8px;
   border:1px solid #d1d5db;
-  background:#fff;
 }
 
 .btn{
@@ -40,7 +38,6 @@ select, input{
   cursor:pointer;
 }
 
-/* KPI */
 .kpiRow{
   display:flex;
   gap:18px;
@@ -62,11 +59,8 @@ select, input{
 
 <body>
 
-<!-- FILTER -->
 <div class="filterBar">
-
   <div class="filters">
-
     <select id="dateType" onchange="handleDateType()">
       <option value="today">Today</option>
       <option value="yesterday">Yesterday</option>
@@ -76,14 +70,11 @@ select, input{
     <input type="date" id="customDate" style="display:none">
 
     <button class="btn" onclick="generate()">Generate</button>
-
   </div>
 
   <button class="btn">+ Add Downtime</button>
-
 </div>
 
-<!-- KPI ROW -->
 <div class="kpiRow">
 
   <div class="card">
@@ -131,19 +122,16 @@ select, input{
 
 <script>
 
-// CONFIG
 const API = "https://plantwiz.pimateck.in/api";
 const DEVICE_ID = "991cf500-661a-11f0-90f1-775fee303094";
 const JWT = new URLSearchParams(location.search).get("token");
 
-// DATE UI
 function handleDateType(){
   const type = document.getElementById("dateType").value;
   document.getElementById("customDate").style.display =
     type === "custom" ? "block" : "none";
 }
 
-// RANGE
 function getRange(){
 
   const type = document.getElementById("dateType").value;
@@ -179,7 +167,6 @@ function getRange(){
   return {startTs:start.getTime(), endTs:end.getTime()};
 }
 
-// FETCH
 async function fetchData(startTs,endTs){
 
   const url = `${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=Downtime_Duration,Downtime_Description,Standard_Speed,Per_Min_Consumption&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`;
@@ -193,7 +180,6 @@ async function fetchData(startTs,endTs){
   return res.json();
 }
 
-// CALC
 function calculateAll(data){
 
   let total=0, prod=0, energy=0, count=0, reasonMap={};
@@ -219,7 +205,19 @@ function calculateAll(data){
     reasonMap[reason] = (reasonMap[reason]||0) + min;
   });
 
-  const percent = (total/1440)*100;
+  // 🔥 UPDATED LOGIC
+  let availableMinutes = 1440;
+
+  const type = document.getElementById("dateType").value;
+
+  if(type === "today"){
+    const now = new Date();
+    availableMinutes = now.getHours()*60 + now.getMinutes();
+  }
+
+  const percent = availableMinutes > 0
+    ? (total / availableMinutes) * 100
+    : 0;
 
   const topReason = Object.keys(reasonMap)
     .reduce((a,b)=> reasonMap[a] > reasonMap[b] ? a : b , "-");
@@ -238,7 +236,6 @@ function calculateAll(data){
   };
 }
 
-// GENERATE
 async function generate(){
 
   if(!JWT){
