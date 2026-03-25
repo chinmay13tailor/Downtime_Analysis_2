@@ -716,6 +716,35 @@ function renderPareto(data){
     }
   });
 }
+  let lossInstance = null;
+
+function renderLossChart(data){
+
+  const map = processReasonData(data);
+
+  const labels = Object.keys(map);
+
+  const prod = labels.map(r=>map[r].prod);
+  const energy = labels.map(r=>map[r].energy);
+
+  if(lossInstance) lossInstance.destroy();
+
+  lossInstance = new Chart(document.getElementById("lossChart"),{
+    data:{
+      labels:labels,
+      datasets:[
+        {type:'bar', label:'Production Loss', data:prod},
+        {type:'line', label:'Energy Loss', data:energy, yAxisID:'y1'}
+      ]
+    },
+    options:{
+      scales:{
+        y:{title:{display:true,text:"Production"}},
+        y1:{position:'right'}
+      }
+    }
+  });
+}
 </script>
 
 </body>
