@@ -698,23 +698,50 @@ function renderPareto(data){
     cum.push((sum/total)*100);
   });
 
-  if(paretoInstance) paretoInstance.destroy();
-
-  paretoInstance = new Chart(document.getElementById("paretoChart"),{
-    data:{
-      labels:labels,
-      datasets:[
-        {type:'bar', label:'Downtime (mins)', data:values},
-        {type:'line', label:'Cumulative %', data:cum, yAxisID:'y1'}
-      ]
+paretoInstance = new Chart(document.getElementById("paretoChart"),{
+  data:{
+    labels:labels,
+    datasets:[
+      {
+        type:'bar',
+        label:'Downtime (mins)',
+        data:values,
+        backgroundColor:'#1e3a8a', // 🔵 dark blue
+        borderRadius:6,           // 🔥 rounded top
+        borderSkipped:'bottom'
+      },
+      {
+        type:'line',
+        label:'Cumulative %',
+        data:cum,
+        yAxisID:'y1',
+        borderColor:'#ef4444',
+        tension:0.4,              // 🔥 smooth curve
+        fill:false
+      }
+    ]
+  },
+  options:{
+    plugins:{
+      legend:{display:true}
     },
-    options:{
-      scales:{
-        y:{title:{display:true,text:"Minutes"}},
-        y1:{position:'right', min:0, max:100}
+    scales:{
+      y:{
+        title:{display:true,text:"Minutes"},
+        grid:{color:'rgba(0,0,0,0.05)'} // 🔥 fade grid
+      },
+      y1:{
+        position:'right',
+        min:0,
+        max:100,
+        grid:{display:false}
+      },
+      x:{
+        grid:{display:false}
       }
     }
-  });
+  }
+});
 }
   let lossInstance = null;
 
@@ -729,21 +756,48 @@ function renderLossChart(data){
 
   if(lossInstance) lossInstance.destroy();
 
-  lossInstance = new Chart(document.getElementById("lossChart"),{
-    data:{
-      labels:labels,
-      datasets:[
-        {type:'bar', label:'Production Loss', data:prod},
-        {type:'line', label:'Energy Loss', data:energy, yAxisID:'y1'}
-      ]
+lossInstance = new Chart(document.getElementById("lossChart"),{
+  data:{
+    labels:labels,
+    datasets:[
+      {
+        type:'bar',
+        label:'Production Loss',
+        data:prod,
+        backgroundColor:'#f97316', // 🟠 saffron
+        borderRadius:6,
+        borderSkipped:'bottom'
+      },
+      {
+        type:'line',
+        label:'Energy Loss',
+        data:energy,
+        yAxisID:'y1',
+        borderColor:'#ef4444', // 🔴 red
+        tension:0.4,
+        fill:false
+      }
+    ]
+  },
+  options:{
+    plugins:{
+      legend:{display:true}
     },
-    options:{
-      scales:{
-        y:{title:{display:true,text:"Production"}},
-        y1:{position:'right'}
+    scales:{
+      y:{
+        title:{display:true,text:"Production"},
+        grid:{color:'rgba(0,0,0,0.05)'}
+      },
+      y1:{
+        position:'right',
+        grid:{display:false}
+      },
+      x:{
+        grid:{display:false}
       }
     }
-  });
+  }
+});
 }
 </script>
 
