@@ -152,7 +152,28 @@ select,input{
 
 .critical{ background:#ef4444; }
 .warning{ background:#f59e0b; }
+.timeline{
+  position:relative;
+  height:34px;
+  background:#e5e7eb;
+  border-radius:10px;
+  overflow:hidden;
+}
 
+.bar{
+  position:absolute;
+  height:100%;
+  border-radius:8px;
+  color:#fff;
+  font-size:11px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:600;
+}
+
+.critical{ background:#ef4444; }
+.warning{ background:#f59e0b; }
 </style>
 </head>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -413,65 +434,115 @@ function renderGantt(data){
   const container = document.getElementById("ganttContainer");
   container.innerHTML = "";
 
-  const timeline = document.createElement("div");
-  timeline.className = "timeline";
+  // 👉 group by machine (fallback: single machine)
+  const machines = {};
 
-  const events = data.Downtime_Duration || [];
+  (data.Downtime_Duration || []).forEach((d,i)=>{
 
-  events.forEach(e=>{
+    const machine = "M-12"; // 👉 future me replace with real tag
 
-    const durationMin = Number(e.value)/60;
+    if(!machines[machine]) machines[machine] = [];
 
-    const start = new Date(e.ts);
-    const minutes = start.getHours()*60 + start.getMinutes();
-
-    const left = (minutes / 1440) * 100;
-    const width = (durationMin / 1440) * 100;
-
-    const bar = document.createElement("div");
-    bar.className = "bar critical";
-
-    bar.style.left = left + "%";
-    bar.style.width = width + "%";
-
-    bar.innerText = durationMin.toFixed(0)+"m";
-
-    timeline.appendChild(bar);
+    machines[machine].push({
+      ts: d.ts,
+      duration: Number(d.value)/60
+    });
 
   });
 
-  container.appendChild(timeline);
+  Object.keys(machines).forEach(machine=>{
+
+    const row = document.createElement("div");
+    row.style.marginBottom = "12px";
+
+    row.innerHTML = `
+      <div style="font-size:13px;margin-bottom:4px;">${machine}</div>
+      <div class="timeline"></div>
+    `;
+
+    const timeline = row.querySelector(".timeline");
+
+    machines[machine].forEach(ev=>{
+
+      const start = new Date(ev.ts);
+      const min = start.getHours()*60 + start.getMinutes();
+
+      const left = (min / 1440) * 100;
+      const width = (ev.duration / 1440) * 100;
+
+      const bar = document.createElement("div");
+      bar.className = "bar critical";
+
+      bar.style.left = left + "%";
+      bar.style.width = width + "%";
+
+      bar.innerText = ev.duration.toFixed(0) + "m";
+
+      timeline.appendChild(bar);
+
+    });
+
+    container.appendChild(row);
+
+  });
+
 }
- function renderHeatmap(data){
+function renderHeatmap(data){
 
   const container = document.getElementById("heatmapChart");
   container.innerHTML = "";
 
-  let grid = document.createElement("div");
+  const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+  // create grid
+  const grid = document.createElement("div");
   grid.style.display = "grid";
-  grid.style.gridTemplateColumns = "repeat(24, 1fr)";
+  grid.style.gridTemplateColumns = "60px repeat(24, 1fr)";
   grid.style.gap = "4px";
 
-  let hourly = new Array(24).fill(0);
+  // initialize matrix
+  let matrix = Array.from({length:7}, ()=>new Array(24).fill(0));
 
   (data.Downtime_Duration || []).forEach(d=>{
-    const date = new Date(d.ts);
-    const h = date.getHours();
-    hourly[h] += Number(d.value)/60;
+
+    const dt = new Date(d.ts);
+
+    let day = dt.getDay(); // 0 = Sun
+    day = day === 0 ? 6 : day - 1; // convert Mon=0
+
+    const hour = dt.getHours();
+
+    matrix[day][hour] += Number(d.value)/60;
+
   });
 
-  hourly.forEach(val=>{
+  // render
+  days.forEach((dayName, d)=>{
 
-    const cell = document.createElement("div");
+    // day label
+    const label = document.createElement("div");
+    label.innerText = dayName;
+    label.style.fontSize = "12px";
+    label.style.display = "flex";
+    label.style.alignItems = "center";
 
-    let intensity = Math.min(val / 60, 1); // normalize
-    let color = `rgba(239,68,68,${0.2 + intensity})`;
+    grid.appendChild(label);
 
-    cell.style.height = "20px";
-    cell.style.borderRadius = "4px";
-    cell.style.background = color;
+    for(let h=0; h<24; h++){
 
-    grid.appendChild(cell);
+      const val = matrix[d][h];
+
+      const cell = document.createElement("div");
+
+      let intensity = Math.min(val / 60, 1);
+
+      cell.style.height = "18px";
+      cell.style.borderRadius = "4px";
+      cell.style.background = `rgba(239,68,68,${0.15 + intensity})`;
+
+      grid.appendChild(cell);
+    }
+
   });
 
   container.appendChild(grid);
