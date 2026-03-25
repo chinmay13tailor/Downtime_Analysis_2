@@ -5,7 +5,6 @@
 <title>Downtime Dashboard</title>
 
 <style>
-
 body{
   font-family:"Segoe UI";
   background:#eef2f7;
@@ -16,7 +15,6 @@ body{
 .filterBar{
   display:flex;
   justify-content:space-between;
-  align-items:center;
   margin-bottom:20px;
 }
 
@@ -30,7 +28,6 @@ select{
   border-radius:8px;
   border:1px solid #d1d5db;
   background:#fff;
-  font-size:13px;
 }
 
 .btn{
@@ -39,139 +36,136 @@ select{
   padding:10px 16px;
   border-radius:8px;
   border:none;
-  font-weight:600;
-  cursor:pointer;
 }
 
-/* KPI ROW */
+/* KPI */
 .kpiRow{
   display:flex;
   gap:18px;
 }
 
-/* CARD */
 .card{
-  width:230px;
+  width:220px;
   background:#fff;
   border-radius:16px;
   padding:18px;
   box-shadow:0 6px 18px rgba(0,0,0,0.08);
 }
 
-/* HEADER */
 .kpiHeader{
   display:flex;
   justify-content:space-between;
-  align-items:center;
-  margin-bottom:14px;
+  margin-bottom:10px;
 }
 
-/* ICON */
 .icon{
-  width:40px;
-  height:40px;
+  width:36px;
+  height:36px;
   border-radius:50%;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:16px;
   color:#fff;
 }
 
-.icon.red{background:#ef4444}
+.red{background:#ef4444}
+.blue{background:#2563eb}
+.orange{background:#f59e0b}
+.green{background:#22c55e}
 
-/* TREND */
-.trend{
-  font-size:13px;
-  font-weight:600;
-  color:#22c55e;
-}
-
-/* TEXT */
-.kpiTitle{
-  font-size:13px;
-  color:#6b7280;
-}
-
-.kpiValue{
-  font-size:26px;
-  font-weight:700;
-  margin-top:6px;
-}
-
-.sub{
-  font-size:12px;
-  color:#9ca3af;
-  margin-top:4px;
-}
-
+.kpiTitle{font-size:12px;color:#6b7280}
+.kpiValue{font-size:22px;font-weight:700;margin-top:5px}
+.sub{font-size:11px;color:#9ca3af}
 </style>
 </head>
 
 <body>
 
-<!-- FILTER BAR -->
+<!-- FILTER -->
 <div class="filterBar">
-
   <div class="filters">
     <select><option>Today</option></select>
     <select><option>All Shifts</option></select>
     <select><option>All Machines</option></select>
     <select><option>All Downtime Types</option></select>
   </div>
-
   <button class="btn">+ Add Downtime</button>
-
 </div>
 
 <!-- KPI ROW -->
 <div class="kpiRow">
 
-  <!-- KPI 1 -->
   <div class="card">
-
-    <div class="kpiHeader">
-      <div class="icon red">⏱</div>
-      <div class="trend">↑</div>
-    </div>
-
+    <div class="kpiHeader"><div class="icon red">⏱</div></div>
     <div class="kpiTitle">Total Downtime</div>
+    <div class="kpiValue" id="kpi-total">--</div>
+    <div class="sub">mins</div>
+  </div>
 
-    <div class="kpiValue" id="kpi-total-downtime">-- mins</div>
+  <div class="card">
+    <div class="kpiHeader"><div class="icon blue">%</div></div>
+    <div class="kpiTitle">Downtime %</div>
+    <div class="kpiValue" id="kpi-percent">--</div>
+    <div class="sub">%</div>
+  </div>
 
-    <div class="sub">vs yesterday</div>
+  <div class="card">
+    <div class="kpiHeader"><div class="icon orange">⚙</div></div>
+    <div class="kpiTitle">Production Loss</div>
+    <div class="kpiValue" id="kpi-prod">--</div>
+    <div class="sub">nos</div>
+  </div>
 
+  <div class="card">
+    <div class="kpiHeader"><div class="icon orange">⚡</div></div>
+    <div class="kpiTitle">Energy Loss</div>
+    <div class="kpiValue" id="kpi-energy">--</div>
+    <div class="sub">kWh</div>
+  </div>
+
+  <div class="card">
+    <div class="kpiHeader"><div class="icon blue">i</div></div>
+    <div class="kpiTitle">Top Reason</div>
+    <div class="kpiValue" id="kpi-reason">--</div>
+  </div>
+
+  <div class="card">
+    <div class="kpiHeader"><div class="icon green">🔧</div></div>
+    <div class="kpiTitle">MTTR</div>
+    <div class="kpiValue" id="kpi-mttr">--</div>
+    <div class="sub">mins</div>
+  </div>
+
+  <div class="card">
+    <div class="kpiHeader"><div class="icon green">🔄</div></div>
+    <div class="kpiTitle">MTBF</div>
+    <div class="kpiValue" id="kpi-mtbf">--</div>
+    <div class="sub">mins</div>
   </div>
 
 </div>
 
 <script>
 
-// ================= CONFIG =================
+// CONFIG
 const API = "https://plantwiz.pimateck.in/api";
 const DEVICE_ID = "991cf500-661a-11f0-90f1-775fee303094";
 const JWT = new URLSearchParams(location.search).get("token");
 
-// ================= DATE RANGE (TODAY ONLY) =================
+// DATE RANGE (TODAY)
 function getTodayRange(){
-
   const now = new Date();
-
   const start = new Date();
   start.setHours(0,0,0,0);
-
-  return {
-    startTs: start.getTime(),
-    endTs: now.getTime()
-  };
+  return {startTs:start.getTime(), endTs:now.getTime()};
 }
 
-// ================= FETCH =================
+// FETCH
 async function fetchData(){
 
-  const {startTs, endTs} = getTodayRange();
+  const {startTs,endTs} = getTodayRange();
 
-  const url = `${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=Downtime_Duration&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`;
+  const url = `${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=Downtime_Duration,Downtime_Description,Standard_Speed,Per_Min_Consumption&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`;
 
   const res = await fetch(url,{
     headers:{
@@ -182,34 +176,79 @@ async function fetchData(){
   return res.json();
 }
 
-// ================= CALCULATION =================
-function calculateTotalDowntime(data){
+// CALCULATION
+function calculateAll(data){
 
   let total = 0;
+  let prod = 0;
+  let energy = 0;
+  let count = 0;
+  let reasonMap = {};
 
-  (data.Downtime_Duration || []).forEach(d=>{
-    total += Number(d.value || 0) / 60;
+  const d = data.Downtime_Duration || [];
+  const r = data.Downtime_Description || [];
+  const s = data.Standard_Speed || [];
+  const e = data.Per_Min_Consumption || [];
+
+  d.forEach((val,i)=>{
+
+    const min = Number(val.value)/60;
+
+    total += min;
+    count++;
+
+    const speed = Number(s[i]?.value || 0);
+    const energyRate = Number(e[i]?.value || 0);
+    const reason = (r[i]?.value || "Unknown").trim();
+
+    prod += min * speed;
+    energy += min * energyRate;
+
+    reasonMap[reason] = (reasonMap[reason]||0) + min;
+
   });
 
-  return total.toFixed(0);
+  const percent = (total / 1440) * 100;
+
+  const topReason = Object.keys(reasonMap)
+    .reduce((a,b)=> reasonMap[a] > reasonMap[b] ? a : b , "-");
+
+  const mttr = count ? total/count : 0;
+  const mtbf = count ? 1440/count : 0;
+
+  return {
+    total: total.toFixed(0),
+    percent: percent.toFixed(1),
+    prod: prod.toFixed(0),
+    energy: energy.toFixed(0),
+    topReason,
+    mttr: mttr.toFixed(1),
+    mtbf: mtbf.toFixed(0)
+  };
 }
 
-// ================= MAIN =================
+// MAIN
 async function init(){
 
   if(!JWT){
-    alert("Token missing in URL");
+    alert("Token missing");
     return;
   }
 
   const raw = await fetchData();
 
-  console.log("RAW DATA:", raw.Downtime_Duration);
+  console.log("RAW:", raw);
 
-  const total = calculateTotalDowntime(raw);
+  const kpi = calculateAll(raw);
 
-  document.getElementById("kpi-total-downtime").innerText =
-    total + " mins";
+  document.getElementById("kpi-total").innerText = kpi.total;
+  document.getElementById("kpi-percent").innerText = kpi.percent;
+  document.getElementById("kpi-prod").innerText = kpi.prod;
+  document.getElementById("kpi-energy").innerText = kpi.energy;
+  document.getElementById("kpi-reason").innerText = kpi.topReason;
+  document.getElementById("kpi-mttr").innerText = kpi.mttr;
+  document.getElementById("kpi-mtbf").innerText = kpi.mtbf;
+
 }
 
 init();
