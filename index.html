@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Downtime Analytics</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+font-family:"Segoe UI",sans-serif;
+background:#eef2f7;
+margin:0;
+padding:20px;
+}
+
+/* FILTER BAR */
+.filterBar{
+display:flex;
+justify-content:space-between;
+margin-bottom:20px;
+}
+.filters{
+display:flex;
+gap:10px;
+}
+select{
+padding:6px 10px;
+border-radius:6px;
+border:1px solid #ddd;
+}
+.btn{
+background:#2563eb;
+color:#fff;
+border:none;
+padding:8px 14px;
+border-radius:6px;
+cursor:pointer;
+}
+
+/* KPI */
+.kpiRow{
+display:grid;
+grid-template-columns:repeat(7,1fr);
+gap:12px;
+margin-bottom:20px;
+}
+.card{
+background:#fff;
+border-radius:12px;
+padding:15px;
+box-shadow:0 2px 6px rgba(0,0,0,0.08);
+}
+.kpiTitle{font-size:12px;color:#777}
+.kpiValue{font-size:20px;font-weight:bold}
+.green{color:#22c55e}
+.red{color:#ef4444}
+
+/* GRID */
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:15px;
+margin-bottom:15px;
+}
+
+/* GANTT */
+.ganttRow{
+margin:10px 0;
+}
+.bar{
+height:20px;
+border-radius:6px;
+margin:5px 0;
+position:relative;
+}
+.redBar{background:#ef4444}
+.yellowBar{background:#f59e0b}
+.bar span{
+position:absolute;
+left:50%;
+top:50%;
+transform:translate(-50%,-50%);
+font-size:12px;
+color:#fff;
+}
+
+/* HEATMAP */
+.heatmap{
+display:grid;
+grid-template-columns:repeat(24,1fr);
+gap:3px;
+}
+.cell{
+height:12px;
+border-radius:3px;
+background:#f1f5f9;
+}
+.l1{background:#fecaca}
+.l2{background:#f87171}
+.l3{background:#ef4444}
+
+/* RECENT */
+.entry{
+display:flex;
+justify-content:space-between;
+padding:8px 0;
+border-bottom:1px solid #eee;
+}
+
+/* WHAT IF */
+.whatif{
+background:#d1fae5;
+border-radius:12px;
+padding:20px;
+margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- FILTER -->
+<div class="filterBar">
+<div class="filters">
+<select><option>Today</option></select>
+<select><option>All Shifts</option></select>
+<select><option>All Machines</option></select>
+<select><option>All Downtime Types</option></select>
+</div>
+<button class="btn">+ Add Downtime</button>
+</div>
+
+<!-- KPI -->
+<div class="kpiRow">
+<div class="card"><div class="kpiTitle">Total Downtime</div><div class="kpiValue">285 mins</div></div>
+<div class="card"><div class="kpiTitle">Downtime %</div><div class="kpiValue">8.5%</div></div>
+<div class="card"><div class="kpiTitle">Production Loss</div><div class="kpiValue">1250 nos</div></div>
+<div class="card"><div class="kpiTitle">Energy Loss</div><div class="kpiValue">450 kWh</div></div>
+<div class="card"><div class="kpiTitle">Top Reason</div><div class="kpiValue">Material Jam</div></div>
+<div class="card"><div class="kpiTitle">MTTR</div><div class="kpiValue red">42 mins</div></div>
+<div class="card"><div class="kpiTitle">MTBF</div><div class="kpiValue green">185 mins</div></div>
+</div>
+
+<!-- GANTT + HEATMAP -->
+<div class="grid">
+
+<div class="card">
+<h4>Downtime Timeline (Gantt)</h4>
+<div class="ganttRow">
+M-12
+<div class="bar redBar" style="width:40%"><span>45m</span></div>
+<div class="bar yellowBar" style="width:20%"><span>30m</span></div>
+</div>
+
+<div class="ganttRow">
+M-08
+<div class="bar redBar" style="width:60%"><span>60m</span></div>
+</div>
+
+</div>
+
+<div class="card">
+<h4>Hourly Downtime Heatmap</h4>
+<div class="heatmap">
+<script>
+for(let i=0;i<120;i++){
+document.write('<div class="cell l'+Math.ceil(Math.random()*3)+'"></div>');
+}
+</script>
+</div>
+</div>
+
+</div>
+
+<!-- PARETO + LOSS -->
+<div class="grid">
+
+<div class="card">
+<h4>Pareto</h4>
+<canvas id="pareto"></canvas>
+</div>
+
+<div class="card">
+<h4>Loss Analysis</h4>
+<canvas id="loss"></canvas>
+</div>
+
+</div>
+
+<!-- DRILLDOWN + RECENT -->
+<div class="grid">
+
+<div class="card">
+<h4>Machine Drilldown</h4>
+<canvas id="donut"></canvas>
+</div>
+
+<div class="card">
+<h4>Recent Entries</h4>
+<div class="entry"><span>M-12 Material Jam</span><span>45 mins</span></div>
+<div class="entry"><span>M-08 Breakdown</span><span>25 mins</span></div>
+</div>
+
+</div>
+
+<!-- ADVANCED + AI -->
+<div class="grid">
+
+<div class="card">
+<h4>Advanced KPIs</h4>
+<div>OEE Impact: -12.5%</div>
+<div>Cost: ₹45,200</div>
+</div>
+
+<div class="card">
+<h4>AI Insights</h4>
+<div>Material Jam highest downtime</div>
+<div>Peak: 2PM-4PM</div>
+</div>
+
+</div>
+
+<!-- WHAT IF -->
+<div class="whatif">
+<h3>What-If Analysis</h3>
+<div>If downtime reduced by 10% → +125 nos/day</div>
+<div>Energy saved → 45 kWh/day</div>
+</div>
+
+<script>
+new Chart(document.getElementById("pareto"),{
+type:'bar',
+data:{
+labels:["Material Jam","Breakdown","Tool Change"],
+datasets:[{data:[200,80,50],backgroundColor:"#2563eb"}]
+}
+});
+
+new Chart(document.getElementById("loss"),{
+type:'bar',
+data:{
+labels:["Material Jam","Breakdown"],
+datasets:[
+{label:"Production",data:[1200,400],backgroundColor:"#2563eb"},
+{label:"Energy",data:[450,200],backgroundColor:"#f59e0b"}
+]
+}
+});
+
+new Chart(document.getElementById("donut"),{
+type:'doughnut',
+data:{
+labels:["Jam","Breakdown","Tool"],
+datasets:[{data:[60,25,15],backgroundColor:["#ef4444","#f59e0b","#22c55e"]}]
+}
+});
+</script>
+
+</body>
+</html>
