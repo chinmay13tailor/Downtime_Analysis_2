@@ -2,28 +2,60 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Downtime KPI</title>
+<title>Downtime Dashboard</title>
 
 <style>
+
 body{
   font-family:"Segoe UI";
   background:#eef2f7;
   padding:20px;
 }
 
+/* FILTER BAR */
+.filterBar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+.filters{
+  display:flex;
+  gap:10px;
+}
+
+select{
+  padding:8px 12px;
+  border-radius:8px;
+  border:1px solid #d1d5db;
+  background:#fff;
+  font-size:13px;
+}
+
+.btn{
+  background:#2563eb;
+  color:#fff;
+  padding:10px 16px;
+  border-radius:8px;
+  border:none;
+  font-weight:600;
+  cursor:pointer;
+}
+
 /* KPI ROW */
 .kpiRow{
-  display:grid;
-  grid-template-columns:repeat(7,1fr);
-  gap:12px;
+  display:flex;
+  gap:18px;
 }
 
 /* CARD */
 .card{
+  width:230px;
   background:#fff;
-  border-radius:12px;
-  padding:16px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.08);
+  border-radius:16px;
+  padding:18px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.08);
 }
 
 /* HEADER */
@@ -31,61 +63,87 @@ body{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:10px;
+  margin-bottom:14px;
 }
 
 /* ICON */
 .icon{
-  width:32px;
-  height:32px;
+  width:40px;
+  height:40px;
   border-radius:50%;
   display:flex;
   align-items:center;
   justify-content:center;
+  font-size:16px;
   color:#fff;
-  font-size:14px;
 }
 
 .icon.red{background:#ef4444}
 
 /* TREND */
 .trend{
-  font-size:12px;
+  font-size:13px;
   font-weight:600;
+  color:#22c55e;
 }
-
-.trend.green{color:#22c55e}
 
 /* TEXT */
 .kpiTitle{
-  font-size:12px;
+  font-size:13px;
   color:#6b7280;
 }
 
 .kpiValue{
-  font-size:20px;
-  font-weight:600;
-  margin-top:4px;
+  font-size:26px;
+  font-weight:700;
+  margin-top:6px;
 }
 
 .sub{
-  font-size:11px;
+  font-size:12px;
   color:#9ca3af;
+  margin-top:4px;
 }
+
 </style>
 </head>
 
 <body>
 
+<!-- FILTER BAR -->
+<div class="filterBar">
+
+  <div class="filters">
+    <select>
+      <option>Today</option>
+    </select>
+
+    <select>
+      <option>All Shifts</option>
+    </select>
+
+    <select>
+      <option>All Machines</option>
+    </select>
+
+    <select>
+      <option>All Downtime Types</option>
+    </select>
+  </div>
+
+  <button class="btn">+ Add Downtime</button>
+
+</div>
+
 <!-- KPI ROW -->
 <div class="kpiRow">
 
-  <!-- KPI 1: TOTAL DOWNTIME -->
+  <!-- KPI 1 -->
   <div class="card">
 
     <div class="kpiHeader">
       <div class="icon red">⏱</div>
-      <div class="trend green">↑</div>
+      <div class="trend">↑</div>
     </div>
 
     <div class="kpiTitle">Total Downtime</div>
@@ -100,18 +158,18 @@ body{
 
 <script>
 
-// ================= CONFIG =================
+// CONFIG
 const API = "https://plantwiz.pimateck.in/api";
 const DEVICE_ID = "991cf500-661a-11f0-90f1-775fee303094";
 const JWT = new URLSearchParams(location.search).get("token");
 
-// ================= FETCH =================
+// FETCH
 async function fetchData(){
 
   const now = Date.now();
   const start = now - (24*60*60*1000);
 
-  const url = `${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=Downtime_Start_Time,Downtime_End_Time,Downtime_Description,Downtime_Duration&startTs=${start}&endTs=${now}&limit=1000&agg=NONE`;
+  const url = `${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=Downtime_Duration&startTs=${start}&endTs=${now}&limit=1000&agg=NONE`;
 
   const res = await fetch(url,{
     headers:{
@@ -122,70 +180,32 @@ async function fetchData(){
   return res.json();
 }
 
-// ================= MERGE =================
-function merge(data){
-
-  const map = new Map();
-
-  Object.keys(data).forEach(key=>{
-    (data[key] || []).forEach(d=>{
-      const ts = d.ts;
-
-      if(!map.has(ts)){
-        map.set(ts,{});
-      }
-
-      map.get(ts)[key] = d.value;
-    });
-  });
-
-  return Array.from(map.values());
-}
-
-// ================= EVENTS =================
-function buildEvents(rows){
-
-  return rows
-    .filter(r => r.Downtime_Duration)
-    .map(r=>{
-
-      const durationMin = Number(r.Downtime_Duration) / 60;
-
-      return {
-        duration: durationMin
-      };
-
-    });
-
-}
-
-// ================= KPI =================
-function renderTotalDowntime(events){
+// CALCULATE
+function calculateTotal(data){
 
   let total = 0;
 
-  events.forEach(e=>{
-    total += e.duration;
+  (data.Downtime_Duration || []).forEach(d=>{
+    total += Number(d.value)/60;
   });
 
-  total = total.toFixed(0);
-
-  document.getElementById("kpi-total-downtime").innerText = total + " mins";
+  return total.toFixed(0);
 }
 
-// ================= MAIN =================
+// MAIN
 async function init(){
 
   if(!JWT){
-    alert("Token missing in URL");
+    alert("Token missing");
     return;
   }
 
   const raw = await fetchData();
-  const rows = merge(raw);
-  const events = buildEvents(rows);
 
-  renderTotalDowntime(events);
+  const total = calculateTotal(raw);
+
+  document.getElementById("kpi-total-downtime").innerText =
+    total + " mins";
 }
 
 init();
