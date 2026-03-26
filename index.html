@@ -656,7 +656,7 @@ function renderGantt(data){
     if(!machines[machine]) machines[machine] = [];
 
     machines[machine].push({
-      ts: new Date(data.Downtime_Start_Time[i]?.value).getTime()
+      ts: new Date(data.Downtime_Start_Time[i]?.value).getTime(),
       duration: Number(d.value)/60
     });
 
