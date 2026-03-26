@@ -662,10 +662,59 @@ function renderGantt(data){
 
       bar.innerText = "";
     // ✅ tooltip
-      bar.title =
-        "Start: " + start.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) +
-        "\nEnd: " + end.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) +
-        "\nDuration: " + duration + " mins";
+bar.onmousemove = function(e){
+
+  let tooltip = document.getElementById("customTooltip");
+
+  if(!tooltip){
+    tooltip = document.createElement("div");
+    tooltip.id = "customTooltip";
+    document.body.appendChild(tooltip);
+  }
+
+  tooltip.style.display = "block";
+  tooltip.style.left = (e.pageX + 15) + "px";
+  tooltip.style.top = (e.pageY + 15) + "px";
+
+  tooltip.innerHTML = `
+    <div style="
+      background:rgba(20,24,40,0.95);
+      color:#fff;
+      padding:14px 16px;
+      border-radius:12px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.4);
+      min-width:230px;
+      font-family:'Segoe UI';
+      font-size:13px;
+    ">
+
+      <div style="font-weight:600; margin-bottom:8px; color:#4f8cff;">
+        ⚙️ Downtime Details
+      </div>
+
+      <div style="margin-bottom:6px;">
+        <span style="color:#9ca3af;">Start:</span>
+        <b>${start.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</b>
+      </div>
+
+      <div style="margin-bottom:6px;">
+        <span style="color:#9ca3af;">End:</span>
+        <b>${end.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</b>
+      </div>
+
+      <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.1);">
+        <span style="color:#9ca3af;">Duration:</span>
+        <b style="color:#00e676;">${duration} mins</b>
+      </div>
+
+    </div>
+  `;
+};
+
+bar.onmouseleave = function(){
+  const tooltip = document.getElementById("customTooltip");
+  if(tooltip) tooltip.style.display = "none";
+};
       
       timeline.appendChild(bar);
 
