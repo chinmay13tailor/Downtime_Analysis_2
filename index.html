@@ -909,28 +909,32 @@ const totalDowntime = Object.values(map)
   const cost = totalDowntime * 25;
 
   // Planned vs Unplanned
-  let planned = 0, unplanned = 0;
+// 🔥 use processed data (IMPORTANT)
+const map = processReasonData(data);
 
-  (data.Downtime_Description || []).forEach((r,i)=>{
+let planned = 0;
+let total = 0;
 
-    const reason = r.value;
-    const dur = Number(data.Downtime_Duration[i]?.value || 0)/60;
+Object.entries(map).forEach(([reason, val])=>{
 
-    if(reason === "Planned maintenance") planned += dur;
-    else unplanned += dur;
+  total += val.downtime;
 
-  });
+  if(reason.trim().toLowerCase() === "planned maintenance"){
+    planned += val.downtime;
+  }
 
-  const plannedPct = planned * 100 / (totalDowntime || 1);
-  const unplannedPct = unplanned * 100 / (totalDowntime || 1);
+});
 
-  return {
-    availabilityLoss: availabilityLoss.toFixed(1),
-    oee: availabilityLoss.toFixed(1),
-    cost: cost.toFixed(0),
-    planned: plannedPct.toFixed(1),
-    unplanned: unplannedPct.toFixed(1)
-  };
+const plannedPct = total ? (planned * 100 / total) : 0;
+const unplannedPct = 100 - plannedPct;
+
+return {
+  availabilityLoss: availabilityLoss.toFixed(1),
+  oee: availabilityLoss.toFixed(1),
+  cost: cost.toFixed(0),
+  planned: plannedPct.toFixed(1),
+  unplanned: unplannedPct.toFixed(1)
+};
 } 
 
   function renderAdvancedKPI(k){
