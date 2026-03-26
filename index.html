@@ -174,6 +174,54 @@ select,input{
 
 .critical{ background:#ef4444; }
 .warning{ background:#f59e0b; }
+
+ /* 🔥 AI CARD UI */
+.ai-card {
+  background: linear-gradient(180deg, #f8fafc, #eef2ff);
+  border-radius: 18px;
+  padding: 20px;
+}
+
+.ai-row {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.ai-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-weight:600;
+}
+
+/* COLORS */
+.ai-red { background:#fee2e2; }
+.ai-orange { background:#fff7ed; }
+.ai-green { background:#dcfce7; }
+
+.icon-red { background:#ef4444; }
+.icon-orange { background:#f97316; }
+.icon-green { background:#16a34a; }
+
+.ai-title {
+  font-weight:600;
+  margin-bottom:4px;
+}
+
+.ai-text {
+  font-size:13px;
+  color:#374151;
+}
+
+.highlight-red { color:#dc2626; font-weight:600; }
+.highlight-green { color:#059669; font-weight:600; } 
 </style>
 </head>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1125,27 +1173,52 @@ freqInstance = new Chart(document.getElementById("freqChart"),{
   };
 } 
 
- function renderAI(ins){
+function renderAI(ins){
 
   document.getElementById("aiInsights").innerHTML = `
 
-    <div style="background:#fff; padding:12px; border-radius:10px; margin-bottom:10px;">
-      <b>Critical Finding</b><br>
-      ${ins.percent}% of downtime is caused by <span style="color:red">${ins.topReason}</span>
+  <div class="ai-card">
+
+    <!-- 🔴 Critical -->
+    <div class="ai-row ai-red">
+      <div class="ai-icon icon-red">!</div>
+      <div>
+        <div class="ai-title">Critical Finding</div>
+        <div class="ai-text">
+          ${ins.percent}% of total downtime is caused by 
+          <span class="highlight-red">${ins.topReason}</span>. Immediate attention required.
+        </div>
+      </div>
     </div>
 
-    <div style="background:#fff; padding:12px; border-radius:10px; margin-bottom:10px;">
-      <b>Peak Failure Window</b><br>
-      Most downtime occurs between <span style="color:#f97316">${ins.peakStart}:00 - ${ins.peakEnd}:00</span>
+    <!-- 🟠 Peak -->
+    <div class="ai-row ai-orange">
+      <div class="ai-icon icon-orange">⏱</div>
+      <div>
+        <div class="ai-title">Peak Failure Window</div>
+        <div class="ai-text">
+          Most downtime occurs between 
+          <span class="highlight-red">${ins.peakStart}:00 - ${ins.peakEnd}:00</span>.
+        </div>
+      </div>
     </div>
 
-    <div style="background:#d1fae5; padding:12px; border-radius:10px;">
-      <b>Optimization Potential</b><br>
-      If downtime reduced, estimated savings: ₹${ins.cost} + ₹${ins.energyCost} energy
+    <!-- 🟢 Optimization -->
+    <div class="ai-row ai-green">
+      <div class="ai-icon icon-green">↗</div>
+      <div>
+        <div class="ai-title">Optimization Potential</div>
+        <div class="ai-text">
+          If downtime reduced, estimated savings: 
+          <span class="highlight-green">₹${ins.cost}</span> + 
+          <span class="highlight-green">${ins.energyLoss} kWh</span>
+        </div>
+      </div>
     </div>
 
+  </div>
   `;
-} 
+}
 
 function renderWhatIf(k){
 
