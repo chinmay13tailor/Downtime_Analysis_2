@@ -430,7 +430,14 @@ select,input{
 
 </div>
 <script>
+function getLatestValue(arr){
+  if(!arr || arr.length === 0) return 0;
 
+  // sort by timestamp
+  arr.sort((a,b)=>a.ts - b.ts);
+
+  return Number(arr[arr.length - 1].value || 0);
+}
 // 🔹 SAME LOGIC (UNCHANGED)
 const API = "https://plantwiz.pimateck.in/api";
 const DEVICE_ID = "991cf500-661a-11f0-90f1-775fee303094";
@@ -1002,45 +1009,46 @@ lossInstance = new Chart(document.getElementById("lossChart"),{
 });
 }
 
- function calculateAdvancedKPIs(data){
+function calculateAdvancedKPIs(data){
 
   const runtimeArr = data.Currentday_Runtime || [];
   const downtimeArr = data.Currentday_Downtime || [];
-  const runtime = Math.max(...runtimeArr.map(x=>Number(x.value)||0));
-  const downtime = Math.max(...downtimeArr.map(x=>Number(x.value)||0));
+
+  // ✅ FIXED LOGIC
+  const runtime = getLatestValue(runtimeArr);
+  const downtime = getLatestValue(downtimeArr);
+
   const totalTime = runtime + downtime;
   const availability = totalTime ? (runtime * 100 / totalTime) : 0;
   const availabilityLoss = 100 - availability;
-const map = processReasonData(data);
-const totalDowntime = Object.values(map)
-  .reduce((a,b)=>a + b.downtime, 0);
+
+  const map = processReasonData(data);
+  const totalDowntime = Object.values(map)
+    .reduce((a,b)=>a + b.downtime, 0);
+
   const cost = totalDowntime * 25;
 
-  // Planned vs Unplanned
-// 🔥 use processed data (IMPORTANT)
-let planned = 0;
-let total = 0;
-Object.entries(map).forEach(([reason, val])=>{
+  let planned = 0;
+  let total = 0;
 
-  total += val.downtime;
+  Object.entries(map).forEach(([reason, val])=>{
+    total += val.downtime;
+    if(reason.trim().toLowerCase() === "planned maintenance"){
+      planned += val.downtime;
+    }
+  });
 
-  if(reason.trim().toLowerCase() === "planned maintenance"){
-    planned += val.downtime;
-  }
+  const plannedPct = total ? (planned * 100 / total) : 0;
+  const unplannedPct = 100 - plannedPct;
 
-});
-
-const plannedPct = total ? (planned * 100 / total) : 0;
-const unplannedPct = 100 - plannedPct;
-
-return {
-  availabilityLoss: availabilityLoss.toFixed(1),
-  oee: availabilityLoss.toFixed(1),
-  cost: cost.toFixed(0),
-  planned: plannedPct.toFixed(1),
-  unplanned: unplannedPct.toFixed(1)
-};
-} 
+  return {
+    availabilityLoss: availabilityLoss.toFixed(1),
+    oee: availabilityLoss.toFixed(1),
+    cost: cost.toFixed(0),
+    planned: plannedPct.toFixed(1),
+    unplanned: unplannedPct.toFixed(1)
+  };
+}
 
 function renderAdvancedKPI(k){
 
