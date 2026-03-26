@@ -935,14 +935,55 @@ function renderFreqChart(data){
   if(freqInstance) freqInstance.destroy();
 
   freqInstance = new Chart(document.getElementById("freqChart"),{
-    type:'scatter',
-    data:{
-      datasets:[{
-        label:'Frequency vs Duration',
-        data:points
-      }]
+  type:'scatter',
+  data:{
+    datasets:[{
+      label:'Frequency vs Duration',
+      data:points,
+      backgroundColor:'#3b82f6',
+      pointRadius:5,
+      pointHoverRadius:7
+    }]
+  },
+  options:{
+    plugins:{
+      legend:{display:false},
+
+      title:{
+        display:true,
+        text:'Frequency vs Duration Analysis',
+        font:{size:14, weight:'600'}
+      }
+    },
+    scales:{
+      x:{
+        title:{
+          display:true,
+          text:'Frequency'
+        },
+        ticks:{
+          precision:0
+        },
+        reverse:true,
+        grid:{
+          color:'rgba(0,0,0,0.05)'
+        }
+      },
+      y:{
+        title:{
+          display:true,
+          text:'Avg Duration'
+        },
+        ticks:{
+          precision:0
+        },
+        grid:{
+          color:'rgba(0,0,0,0.05)'
+        }
+      }
     }
-  });
+  }
+});
 }
   function renderRecent(data){
 
