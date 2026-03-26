@@ -573,10 +573,13 @@ async function generate(){
 window.selectedEndTs = range.endTs;
 
 const raw = await fetchData(range.startTs, range.endTs);
-
+console.log("Selected Range:", range.startTs, range.endTs);
+console.log("Raw count:", raw.Downtime_Start_Time?.length);
+console.log("Selected Start:", new Date(window.selectedStartTs));
+console.log("Selected End:", new Date(window.selectedEndTs));
 // ✅ NEW LINE (IMPORTANT)
 const filteredRaw = filterDataByRange(raw, range.startTs, range.endTs);
-
+console.log("Filtered count:", filteredRaw.Downtime_Start_Time?.length);
 const k = calculateAll(filteredRaw);
 
   document.getElementById("kpi-total").innerText=k.total;
@@ -603,7 +606,7 @@ renderWhatIf(k);
 renderHeatmap(weekData);
 renderFreqChart(raw);
 renderGantt(filteredRaw);
-renderPareto(raw);
+renderPareto(filteredRaw);
 renderLossChart(filteredRaw);
 const adv = calculateAdvancedKPIs(filteredRaw);
 renderAdvancedKPI(adv);
@@ -850,7 +853,18 @@ axis.innerHTML = `
 container.appendChild(axis);
 }
   function processReasonData(data){
+startArr.forEach((st,i)=>{
 
+  const start = new Date(st.value).getTime();
+
+  console.log("Checking event:", new Date(start));
+
+  if(start < window.selectedStartTs || start > window.selectedEndTs){
+    console.log("❌ OUTSIDE RANGE");
+    return;
+  }
+
+  console.log("✅ INSIDE RANGE");
   const startArr = data.Downtime_Start_Time || [];
   const endArr = data.Downtime_End_Time || [];
   const reasons = data.Downtime_Description || [];
