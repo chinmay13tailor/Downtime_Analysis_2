@@ -429,16 +429,44 @@ function calculateAll(data){
   const s=data.Standard_Speed||[];
   const e=data.Per_Min_Consumption||[];
 
-  d.forEach((v,i)=>{
-    const min=Number(v.value)/60;
-    total+=min; count++;
+// 🔥 build maps (minute → value)
+const speedMap = {};
+s.forEach(x=>{
+  speedMap[Math.floor(x.ts/60000)] = Number(x.value);
+});
 
-    prod+=min*(Number(s[i]?.value||0));
-    energy+=min*(Number(e[i]?.value||0));
+const energyMap = {};
+e.forEach(x=>{
+  energyMap[Math.floor(x.ts/60000)] = Number(x.value);
+});
 
-    const reason=(r[i]?.value||"Unknown").trim();
-    map[reason]=(map[reason]||0)+min;
-  });
+d.forEach((v,i)=>{
+
+  const start = new Date(data.Downtime_Start_Time[i]?.value).getTime();
+  const end = new Date(data.Downtime_End_Time[i]?.value).getTime();
+
+  const reason = (r[i]?.value||"Unknown").trim();
+
+  if(!map[reason]) map[reason]=0;
+
+  // 🔥 minute loop (MAIN LOGIC)
+  for(let t=start; t<=end; t+=60000){
+
+    const key = Math.floor(t/60000);
+
+    const sp = speedMap[key] || 0;
+    const en = energyMap[key] || 0;
+
+    prod += sp;
+    energy += en;
+    total += 1;
+
+    map[reason] += 1;
+  }
+
+  count++;
+
+});
 
   let available=1440;
   if(document.getElementById("dateType").value==="today"){
