@@ -903,8 +903,9 @@ lossInstance = new Chart(document.getElementById("lossChart"),{
   const totalTime = runtime + downtime;
   const availability = totalTime ? (runtime * 100 / totalTime) : 0;
   const availabilityLoss = 100 - availability;
-  const totalDowntime = (data.Downtime_Duration || [])
-    .reduce((a,b)=>a + Number(b.value)/60, 0);
+const map = processReasonData(data);
+const totalDowntime = Object.values(map)
+  .reduce((a,b)=>a + b.downtime, 0);
   const cost = totalDowntime * 25;
 
   // Planned vs Unplanned
