@@ -910,11 +910,8 @@ const totalDowntime = Object.values(map)
 
   // Planned vs Unplanned
 // 🔥 use processed data (IMPORTANT)
-const map = processReasonData(data);
-
 let planned = 0;
 let total = 0;
-
 Object.entries(map).forEach(([reason, val])=>{
 
   total += val.downtime;
