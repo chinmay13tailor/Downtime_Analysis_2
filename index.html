@@ -749,7 +749,7 @@ container.appendChild(axis);
     }
 
     // 🔥 minute loop
-    for(let t=start; t<=end; t+=60000){
+    for(let t=start; t<end; t+=60000){
 
       const key = Math.floor(t/60000);
 
