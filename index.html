@@ -845,16 +845,13 @@ lossInstance = new Chart(document.getElementById("lossChart"),{
 
   const runtimeArr = data.Currentday_Runtime || [];
   const downtimeArr = data.Currentday_Downtime || [];
-
-  const runtime = Number(runtimeArr.at(-1)?.value || 0);
-  const downtime = Number(downtimeArr.at(-1)?.value || 0);
-
-  const availability = runtime * 100 / (runtime + downtime || 1);
+  const runtime = Math.max(...runtimeArr.map(x=>Number(x.value)||0));
+  const downtime = Math.max(...downtimeArr.map(x=>Number(x.value)||0));
+  const totalTime = runtime + downtime;
+  const availability = totalTime ? (runtime * 100 / totalTime) : 0;
   const availabilityLoss = 100 - availability;
-
   const totalDowntime = (data.Downtime_Duration || [])
     .reduce((a,b)=>a + Number(b.value)/60, 0);
-
   const cost = totalDowntime * 25;
 
   // Planned vs Unplanned
