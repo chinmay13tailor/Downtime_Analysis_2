@@ -1054,7 +1054,7 @@ freqInstance = new Chart(document.getElementById("freqChart"),{
     end: end[i]?.value,
     reason: reason[i]?.value,
     dur: (new Date(end[i]?.value) - new Date(s.value))/60000
-  })).slice(-5).reverse();
+  })).slice(-10).reverse();
 
   entries.forEach(e=>{
 
