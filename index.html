@@ -430,6 +430,18 @@ select,input{
 
 </div>
 <script>
+  function filterDataByRange(data, startTs, endTs){
+
+  const filtered = {};
+
+  Object.keys(data).forEach(key=>{
+    filtered[key] = (data[key] || []).filter(x=>{
+      return x.ts >= startTs && x.ts <= endTs;
+    });
+  });
+
+  return filtered;
+}
 function getLatestValue(arr){
   if(!arr || arr.length === 0) return 0;
 
@@ -558,8 +570,12 @@ async function generate(){
   const range=getRange();
   if(!range) return;
 
-  const raw=await fetchData(range.startTs,range.endTs);
-  const k=calculateAll(raw);
+const raw = await fetchData(range.startTs, range.endTs);
+
+// ✅ NEW LINE (IMPORTANT)
+const filteredRaw = filterDataByRange(raw, range.startTs, range.endTs);
+
+const k = calculateAll(filteredRaw);
 
   document.getElementById("kpi-total").innerText=k.total;
   document.getElementById("kpi-percent").innerText=k.percent;
@@ -568,7 +584,7 @@ async function generate(){
   document.getElementById("kpi-reason").innerText=k.topReason;
   document.getElementById("kpi-mttr").innerText=k.mttr;
   document.getElementById("kpi-mtbf").innerText=k.mtbf;
-renderGantt(raw);
+
 
 // 🔥 WEEK DATA (ONLY CHANGE)
 const weekRange = getWeekRange();
@@ -578,16 +594,18 @@ const weekData = await fetchData(
   weekRange.endTs
 );
 
-const insights = calculateInsights(raw, weekData);
+const insights = calculateInsights(filteredRaw, weekData);
 
 renderAI(insights);
 renderWhatIf(k);
 renderHeatmap(weekData);
-renderPareto(raw);
-renderLossChart(raw);
-const adv = calculateAdvancedKPIs(raw);
-renderAdvancedKPI(adv);
 renderFreqChart(raw);
+renderGantt(filteredRaw);
+renderPareto(filteredRaw);
+renderLossChart(filteredRaw);
+const adv = calculateAdvancedKPIs(filteredRaw);
+renderRecent(filteredRaw);
+
 renderRecent(raw); 
 }
 function getWeekRange(){
@@ -638,7 +656,7 @@ function renderGantt(data){
     if(!machines[machine]) machines[machine] = [];
 
     machines[machine].push({
-      ts: d.ts,
+      ts: new Date(data.Downtime_Start_Time[i]?.value).getTime()
       duration: Number(d.value)/60
     });
 
@@ -754,10 +772,9 @@ function renderHeatmap(data){
   // initialize matrix
   let matrix = Array.from({length:7}, ()=>new Array(24).fill(0));
 
-  (data.Downtime_Duration || []).forEach(d=>{
+(data.Downtime_Duration || []).forEach((d,i)=>{
 
-    const dt = new Date(d.ts);
-
+  const dt = new Date(data.Downtime_Start_Time[i]?.value);
     let day = dt.getDay(); // 0 = Sun
     day = day === 0 ? 6 : day - 1; // convert Mon=0
 
