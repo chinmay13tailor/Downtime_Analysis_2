@@ -934,7 +934,7 @@ function renderFreqChart(data){
 
   if(freqInstance) freqInstance.destroy();
 
-  freqInstance = new Chart(document.getElementById("freqChart"),{
+freqInstance = new Chart(document.getElementById("freqChart"),{
   type:'scatter',
   data:{
     datasets:[{
