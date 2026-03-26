@@ -486,7 +486,7 @@ function getRange(){
 }
 
 async function fetchData(startTs,endTs){
-  const res=await fetch(`${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=Downtime_Start_Time,Downtime_End_Time,Downtime_Description,Standard_Speed,Per_Min_Consumption,Downtime_Duration,Currentday_Runtime,Currentday_Downtime&startTs=${startTs}&endTs=${endTs}&limit=1000&agg=NONE`,{
+  const res=await fetch(`${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries?keys=Downtime_Start_Time,Downtime_End_Time,Downtime_Description,Standard_Speed,Per_Min_Consumption,Downtime_Duration,Currentday_Runtime,Currentday_Downtime&startTs=${startTs}&endTs=${endTs}&limit=10000&agg=NONE`,{
     headers:{"X-Authorization":`Bearer ${JWT}`}
   });
   return res.json();
@@ -573,13 +573,8 @@ async function generate(){
 window.selectedEndTs = range.endTs;
 
 const raw = await fetchData(range.startTs, range.endTs);
-console.log("Selected Range:", range.startTs, range.endTs);
-console.log("Raw count:", raw.Downtime_Start_Time?.length);
-console.log("Selected Start:", new Date(window.selectedStartTs));
-console.log("Selected End:", new Date(window.selectedEndTs));
 // ✅ NEW LINE (IMPORTANT)
 const filteredRaw = filterDataByRange(raw, range.startTs, range.endTs);
-console.log("Filtered count:", filteredRaw.Downtime_Start_Time?.length);
 const k = calculateAll(filteredRaw);
 
   document.getElementById("kpi-total").innerText=k.total;
@@ -910,7 +905,6 @@ let paretoInstance = null;
 function renderPareto(data){
 
   const map = processReasonData(data);
- console.log("Pareto Map:", map);
   const sorted = Object.entries(map)
     .sort((a,b)=>b[1].downtime - a[1].downtime);
 
