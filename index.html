@@ -488,11 +488,12 @@ const weekRange = getWeekRange();
 const weekData = await fetchData(
   weekRange.startTs,
   weekRange.endTs
+);
+
 const insights = calculateInsights(raw, weekData);
 
 renderAI(insights);
 renderWhatIf(insights);
-);
 
 renderHeatmap(weekData);
 renderPareto(raw);
