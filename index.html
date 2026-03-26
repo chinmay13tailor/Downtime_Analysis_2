@@ -521,8 +521,7 @@ const weekData = await fetchData(
 const insights = calculateInsights(raw, weekData);
 
 renderAI(insights);
-renderWhatIf(insights);
-
+renderWhatIf(k);
 renderHeatmap(weekData);
 renderPareto(raw);
 renderLossChart(raw);
@@ -1148,26 +1147,69 @@ freqInstance = new Chart(document.getElementById("freqChart"),{
   `;
 } 
 
- function renderWhatIf(ins){
+function renderWhatIf(k){
 
-  const prodGain = Math.round(ins.percent * 2); // simple logic
-  const energySave = ins.energyLoss;
-  const costSave = ins.cost;
+  const reduction = 0.10; // 10%
 
+  // 🔥 Stage 1 values (already calculated)
+  const total = Number(k.total);
+  const prod = Number(k.prod);
+  const energy = Number(k.energy);
+
+  // 🔥 calculations
+  const productionGain = prod * reduction;
+  const energySaved = energy * reduction;
+  const downtimeSaved = total * reduction;
+
+  const downtimeCost = downtimeSaved * 25;
+  const energyCost = energySaved * 9;
+
+  const totalCostSaving = downtimeCost + energyCost;
+
+  // 🔥 render UI
   document.getElementById("whatIf").innerHTML = `
+  
+    <div style="background:#e6f4ea; border:1px solid #b7e1c3; border-radius:12px; padding:20px;">
 
-    <div style="background:#f1f5f9; padding:15px; border-radius:10px;">
+      <div style="font-weight:600; font-size:16px; margin-bottom:4px;">
+        What-If Analysis
+      </div>
+      <div style="font-size:13px; color:#6b7280; margin-bottom:15px;">
+        Scenario planning tool
+      </div>
 
-      <div>If downtime reduced by 10%:</div>
+      <div style="background:#f8fafc; padding:15px; border-radius:10px;">
 
-      <div style="margin-top:10px;">+${prodGain} nos/day</div>
-      <div>${energySave} kWh/day</div>
-      <div>₹${costSave}/day</div>
+        <div style="margin-bottom:10px;">
+          Simulate impact of downtime reduction:
+        </div>
+
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+          <div>If downtime reduced by 10%:</div>
+          <div style="color:#059669; font-weight:600;">
+            +${productionGain.toFixed(0)} nos/day
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+          <div>Energy saved:</div>
+          <div style="color:#059669; font-weight:600;">
+            ${energySaved.toFixed(1)} kWh/day
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between;">
+          <div>Cost savings:</div>
+          <div style="color:#059669; font-weight:600;">
+            ₹${totalCostSaving.toFixed(0)}/day
+          </div>
+        </div>
+
+      </div>
 
     </div>
-
   `;
-} 
+}
 </script>
 
 </body>
