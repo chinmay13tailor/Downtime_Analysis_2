@@ -852,19 +852,8 @@ axis.innerHTML = `
 
 container.appendChild(axis);
 }
-  function processReasonData(data){
-startArr.forEach((st,i)=>{
+function processReasonData(data){
 
-  const start = new Date(st.value).getTime();
-
-  console.log("Checking event:", new Date(start));
-
-  if(start < window.selectedStartTs || start > window.selectedEndTs){
-    console.log("❌ OUTSIDE RANGE");
-    return;
-  }
-
-  console.log("✅ INSIDE RANGE");
   const startArr = data.Downtime_Start_Time || [];
   const endArr = data.Downtime_End_Time || [];
   const reasons = data.Downtime_Description || [];
@@ -872,7 +861,7 @@ startArr.forEach((st,i)=>{
   const speed = data.Standard_Speed || [];
   const energy = data.Per_Min_Consumption || [];
 
-  // 🔥 maps (minute → value)
+  // 🔥 maps
   const speedMap = {};
   speed.forEach(s=>{
     speedMap[Math.floor(s.ts/60000)] = Number(s.value);
@@ -885,13 +874,13 @@ startArr.forEach((st,i)=>{
 
   let result = {};
 
-startArr.forEach((st,i)=>{
+  startArr.forEach((st,i)=>{
 
-  const start = new Date(st.value).getTime();
-  const end = new Date(endArr[i]?.value).getTime();
+    const start = new Date(st.value).getTime();
+    const end = new Date(endArr[i]?.value).getTime();
 
-  // ✅ ADD THIS FILTER (MAIN FIX)
-  if(start < window.selectedStartTs || start > window.selectedEndTs) return;
+    // ✅ DATE FILTER (MAIN FIX)
+    if(start < window.selectedStartTs || start > window.selectedEndTs) return;
 
     const reason = (reasons[i]?.value || "Unknown").trim();
 
@@ -910,7 +899,6 @@ startArr.forEach((st,i)=>{
       result[reason].prod += sp;
       result[reason].energy += en;
       result[reason].downtime += 1;
-
     }
 
   });
