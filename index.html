@@ -648,6 +648,8 @@ function renderGantt(data){
 
       const start = new Date(ev.ts);
       const min = start.getHours()*60 + start.getMinutes();
+      const end = new Date(start.getTime() + ev.duration*60000);
+      const duration = ev.duration.toFixed(0);
 
       const left = (min / 1440) * 100;
       const width = (ev.duration / 1440) * 100;
@@ -658,8 +660,13 @@ function renderGantt(data){
       bar.style.left = left + "%";
       bar.style.width = width + "%";
 
-      bar.innerText = ev.duration.toFixed(0) + "m";
-
+      bar.innerText = "";
+    // ✅ tooltip
+      bar.title =
+        "Start: " + start.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) +
+        "\nEnd: " + end.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) +
+        "\nDuration: " + duration + " mins";
+      
       timeline.appendChild(bar);
 
     });
