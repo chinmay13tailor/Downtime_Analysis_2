@@ -569,6 +569,8 @@ async function generate(){
 
   const range=getRange();
   if(!range) return;
+  window.selectedStartTs = range.startTs;
+window.selectedEndTs = range.endTs;
 
 const raw = await fetchData(range.startTs, range.endTs);
 
@@ -869,10 +871,13 @@ container.appendChild(axis);
 
   let result = {};
 
-  startArr.forEach((st,i)=>{
+startArr.forEach((st,i)=>{
 
-    const start = new Date(st.value).getTime();
-    const end = new Date(endArr[i]?.value).getTime();
+  const start = new Date(st.value).getTime();
+  const end = new Date(endArr[i]?.value).getTime();
+
+  // ✅ ADD THIS FILTER (MAIN FIX)
+  if(start < window.selectedStartTs || start > window.selectedEndTs) return;
 
     const reason = (reasons[i]?.value || "Unknown").trim();
 
