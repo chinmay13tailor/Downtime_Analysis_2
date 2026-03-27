@@ -778,6 +778,8 @@ bar.onmouseleave = function(){
 function renderHeatmap(data){
 
   const container = document.getElementById("heatmapChart");
+  const type = document.getElementById("heatmapType")?.value || "ALL";
+  const colorType = heatmapColors[type] || "red";
   container.innerHTML = "";
 
   const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
@@ -889,7 +891,6 @@ function renderHeatmapWithFilter(){
   }
 
   const allowedReasons = reasonMap[type] || [];
-  const type = document.getElementById("heatmapType").value;
   const colorType = heatmapColors[type] || "red";
   const data = window.weekDataGlobal;
 
