@@ -602,7 +602,10 @@ const k = calculateAll(filteredRaw);
   document.getElementById("kpi-reason").innerText=k.topReason;
   document.getElementById("kpi-mttr").innerText=k.mttr;
   document.getElementById("kpi-mtbf").innerText=k.mtbf;
-
+  window.globalMaxHeatmap = Math.max(
+  ...(weekData.Downtime_Duration || []).map(x => Number(x.value)/60),
+  1
+);
 
 // 🔥 WEEK DATA (ONLY CHANGE)
 const weekRange = getWeekRange();
@@ -827,7 +830,7 @@ function renderHeatmap(data){
 
       const cell = document.createElement("div");
 
-      const max = Math.max(...matrix.flat(), 1);
+      const max = window.globalMaxHeatmap || 1;
       let intensity = val / max;
 
       cell.style.height = "28px";
