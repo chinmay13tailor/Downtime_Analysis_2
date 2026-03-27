@@ -190,18 +190,17 @@ th{
     <p><b>End:</b> <span id="mEnd"></span></p>
     <p><b>Duration:</b> <span id="mDuration"></span> min</p>
 
-    <select id="mReason" style="width:100%;margin:10px 0">
-      <option>Power failure</option>
-      <option>Planned maintenance</option>
-      <option>Material shortage</option>
-      <option>Changeover / Setup</option>
-      <option>Lubrication cycle</option>
-      <option>Quality inspection hold</option>
-      <option>Unplanned breakdown</option>
-      <option>Overheat cooldown</option>
-      <option>Safety interlock opened</option>
-      <option>Cleaning / 5S</option>
-    </select>
+<!-- TYPE SELECT -->
+<select id="mType" style="width:100%;margin:10px 0" onchange="updateReasons()">
+  <option value="">Select Type</option>
+  <option value="Idle">Idle</option>
+  <option value="Unexpected Downtime">Unexpected Downtime</option>
+  <option value="Setup">Setup</option>
+</select>
+
+<!-- REASON SELECT -->
+<select id="mReason" style="width:100%;margin:10px 0">
+</select>
 
     <button class="btn" onclick="submitUpdate()">Submit</button>
     <button onclick="closeModal()" style="background:#e5e7eb;color:#000;border:none;padding:10px 14px;border-radius:8px;">Cancel</button>
@@ -209,24 +208,33 @@ th{
   </div>
 </div>
 
+<!-- ONLY SCRIPT PART UPDATED BELOW -->
 <script>
+
+const reasonMap = {
+  "Idle": ["Planned maintenance"],
+  "Unexpected Downtime": [
+    "Unplanned breakdown",
+    "Material shortage",
+    "Power failure",
+    "Overheat cooldown"
+  ],
+  "Setup": [
+    "Changeover / Setup",
+    "Safety interlock opened",
+    "Quality inspection hold",
+    "Lubrication cycle",
+    "Cleaning / 5S"
+  ]
+};
 
 /* TOKEN */
 let JWT = new URLSearchParams(location.search).get("token");
-
 if(!JWT){
-  try{
-    JWT = window.parent.localStorage.getItem("jwt_token");
-  }catch(e){}
+  try{ JWT = window.parent.localStorage.getItem("jwt_token"); }catch(e){}
 }
-
-if(!JWT){
-  JWT = localStorage.getItem("jwt");
-}
-
-if(JWT){
-  localStorage.setItem("jwt", JWT);
-}
+if(!JWT){ JWT = localStorage.getItem("jwt"); }
+if(JWT){ localStorage.setItem("jwt", JWT); }
 
 /* CONFIG */
 const API = "https://plantwiz.pimateck.in/api";
@@ -236,7 +244,7 @@ const KEYS = [
   "Downtime_End_Time",
   "Downtime_Duration",
   "Downtime_Description",
-  "Downtime_Type" 
+  "Downtime_Type"
 ];
 
 let allRows = [];
@@ -268,7 +276,6 @@ function getRange(){
 
 /* LOAD */
 async function loadDowntime(){
-
   const {startTs,endTs} = getRange();
 
   const url =
@@ -306,12 +313,10 @@ function renderPage(){
         <td>${fmtDate(r.Downtime_Start_Time)}</td>
         <td>${fmtDate(r.Downtime_End_Time)}</td>
         <td>${secToMin(r.Downtime_Duration)}</td>
-        <td>
-          ${r.Downtime_Description || "—"}
-        </td>
+        <td>${r.Downtime_Description || "—"}</td>
         <td>
           ${r.Downtime_Type || "—"}
-           <span class="menu" onclick='openModal(${JSON.stringify(r)})'>⋮</span>
+          <span class="menu" onclick='openModal(${JSON.stringify(r)})'>⋮</span>
         </td>
       </tr>
     `;
@@ -330,19 +335,44 @@ function prevPage(){
   if(currentPage>1){ currentPage--; renderPage(); }
 }
 function changePageSize(){
-  pageSize=Number(document.getElementById("pageSize").value);
+  pageSize=Number(pageSize);
   currentPage=1;
   renderPage();
 }
 
+/* 🔥 DYNAMIC REASON UPDATE */
+function updateReasons(){
+  const type = document.getElementById("mType").value;
+  const reasonSelect = document.getElementById("mReason");
+
+  reasonSelect.innerHTML = "";
+
+  if(!reasonMap[type]) return;
+
+  reasonMap[type].forEach(r=>{
+    const opt = document.createElement("option");
+    opt.value = r;
+    opt.textContent = r;
+    reasonSelect.appendChild(opt);
+  });
+}
+
 /* MODAL */
 function openModal(row){
-  selectedTs=row.ts;
+  selectedTs = row.ts;
 
-  mStart.textContent=fmtDate(row.Downtime_Start_Time);
-  mEnd.textContent=fmtDate(row.Downtime_End_Time);
-  mDuration.textContent=secToMin(row.Downtime_Duration);
-  mReason.value=row.Downtime_Description || "";
+  mStart.textContent = fmtDate(row.Downtime_Start_Time);
+  mEnd.textContent = fmtDate(row.Downtime_End_Time);
+  mDuration.textContent = secToMin(row.Downtime_Duration);
+
+  // 🔥 SET TYPE
+  document.getElementById("mType").value = row.Downtime_Type || "";
+
+  // 🔥 LOAD REASONS
+  updateReasons();
+
+  // 🔥 SET SELECTED REASON
+  document.getElementById("mReason").value = row.Downtime_Description || "";
 
   editModal.style.display="block";
 }
@@ -351,12 +381,18 @@ function closeModal(){
   editModal.style.display="none";
 }
 
-/* UPDATE */
+/* 🔥 UPDATE BOTH FIELDS */
 async function submitUpdate(){
+
+  const type = document.getElementById("mType").value;
+  const reason = document.getElementById("mReason").value;
 
   const payload=[{
     ts:selectedTs,
-    values:{ Downtime_Description:mReason.value }
+    values:{
+      Downtime_Description: reason,
+      Downtime_Type: type
+    }
   }];
 
   await fetch(`${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/timeseries/ANY`,{
