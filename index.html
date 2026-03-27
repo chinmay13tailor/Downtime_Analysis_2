@@ -602,10 +602,7 @@ const k = calculateAll(filteredRaw);
   document.getElementById("kpi-reason").innerText=k.topReason;
   document.getElementById("kpi-mttr").innerText=k.mttr;
   document.getElementById("kpi-mtbf").innerText=k.mtbf;
-  window.globalMaxHeatmap = Math.max(
-  ...(weekData.Downtime_Duration || []).map(x => Number(x.value)/60),
-  1
-);
+
 
 // 🔥 WEEK DATA (ONLY CHANGE)
 const weekRange = getWeekRange();
@@ -615,12 +612,16 @@ const weekData = await fetchData(
   weekRange.endTs
 );
   window.weekDataGlobal = weekData;
+  window.globalMaxHeatmap = Math.max(
+  ...(weekData.Downtime_Duration || []).map(x => Number(x.value)/60),
+  1
+);
 
 const insights = calculateInsights(filteredRaw, weekData);
 
 renderAI(insights);
 renderWhatIf(k);
-renderHeatmap(weekData);
+//renderHeatmap(weekData);
 renderFreqChart(raw);
 renderGantt(filteredRaw);
 renderPareto(filteredRaw);
