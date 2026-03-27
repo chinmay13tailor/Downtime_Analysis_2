@@ -177,7 +177,20 @@ const KEYS = [
   "Downtime_Duration",
   "Downtime_Description"
 ];
-const JWT = new URLSearchParams(location.search).get("token") || "";
+let JWT = new URLSearchParams(location.search).get("token");
+
+// fallback (agar URL me nahi hai)
+if(!JWT){
+  JWT = localStorage.getItem("jwt");
+}
+
+// agar fir bhi nahi mila
+if(!JWT){
+  alert("Token missing! Please open from main dashboard.");
+}
+  if(JWT){
+  localStorage.setItem("jwt", JWT);
+}
 
 /* Pagination state */
 let allRows = [];
@@ -221,7 +234,16 @@ async function loadDowntime() {
     headers: { "X-Authorization": "Bearer " + JWT }
   });
 
-  const data = await res.json();
+const text = await res.text();
+
+let data;
+try{
+  data = JSON.parse(text);
+}catch(e){
+  console.error("API Response Error:", text);
+  status.textContent = "API Error ❌ (Invalid Token)";
+  return;
+}
 
   const rows = {};
   Object.entries(data).forEach(([key, arr]) => {
