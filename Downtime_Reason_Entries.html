@@ -226,6 +226,7 @@ th{
       <select id="pageSize" onchange="changePageSize()">
         <option value="10">10 rows</option>
         <option value="20">20 rows</option>
+        <option value="20">30 rows</option>
       </select>
 
       <button class="btn" onclick="prevPage()">Prev</button>
@@ -309,7 +310,7 @@ const KEYS = [
 
 let allRows = [];
 let currentPage = 1;
-let pageSize = 10;
+let pageSize = 30;
 let selectedTs = null;
 
 /* HELPERS */
