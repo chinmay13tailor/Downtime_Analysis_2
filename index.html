@@ -345,6 +345,14 @@ select,input{
   <div class="card" style="width:50%; min-height:360px;">
     <div class="kpiTitle" style="font-weight:600;">Hourly Downtime Heatmap</div>
     <div class="sub">Identify peak failure times</div>
+    <div style="margin-top:10px;">
+  <select id="heatmapType" onchange="renderHeatmapWithFilter()">
+    <option value="ALL">All Types</option>
+    <option value="Idle">Idle</option>
+    <option value="Unexpected Downtime">Unexpected Downtime</option>
+    <option value="Setup">Setup</option>
+  </select>
+</div>
 
     <div id="heatmapChart"></div>
 
@@ -431,6 +439,23 @@ function getLatestValue(arr){
 const API = "https://plantwiz.pimateck.in/api";
 const DEVICE_ID = "991cf500-661a-11f0-90f1-775fee303094";
 const JWT = new URLSearchParams(location.search).get("token");
+  /* 🔥 ADD HERE */
+const reasonMap = {
+  "Idle": ["Planned maintenance"],
+  "Unexpected Downtime": [
+    "Unplanned breakdown",
+    "Material shortage",
+    "Power failure",
+    "Overheat cooldown"
+  ],
+  "Setup": [
+    "Changeover / Setup",
+    "Safety interlock opened",
+    "Quality inspection hold",
+    "Lubrication cycle",
+    "Cleaning / 5S"
+  ]
+};
 
 function handleDateType(){
   document.getElementById("customDate").style.display =
@@ -570,6 +595,7 @@ const weekData = await fetchData(
   weekRange.startTs,
   weekRange.endTs
 );
+  window.weekDataGlobal = weekData;
 
 const insights = calculateInsights(filteredRaw, weekData);
 
@@ -583,6 +609,7 @@ renderLossChart(filteredRaw);
 const adv = calculateAdvancedKPIs(filteredRaw);
 renderAdvancedKPI(adv);
 renderRecent(filteredRaw);
+renderHeatmapWithFilter();
 
 }
 function getWeekRange(){
@@ -824,6 +851,40 @@ axis.innerHTML = `
 
 container.appendChild(axis);
 }
+function renderHeatmapWithFilter(){
+
+  const type = document.getElementById("heatmapType").value;
+
+  if(type === "ALL"){
+    renderHeatmap(window.weekDataGlobal);
+    return;
+  }
+
+  const allowedReasons = reasonMap[type] || [];
+
+  const data = window.weekDataGlobal;
+
+  let filtered = {
+    Downtime_Start_Time: [],
+    Downtime_Duration: [],
+    Downtime_Description: []
+  };
+
+  (data.Downtime_Description || []).forEach((r,i)=>{
+
+    const reason = (r.value || "").trim();
+
+    if(allowedReasons.includes(reason)){
+      filtered.Downtime_Description.push(r);
+      filtered.Downtime_Start_Time.push(data.Downtime_Start_Time[i]);
+      filtered.Downtime_Duration.push(data.Downtime_Duration[i]);
+    }
+
+  });
+
+  renderHeatmap(filtered);
+}
+  
 function processReasonData(data){
 
   const startArr = data.Downtime_Start_Time || [];
