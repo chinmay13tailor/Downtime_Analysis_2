@@ -155,10 +155,11 @@ th{
         <th>End Time</th>
         <th>Duration (min)</th>
         <th>Downtime Description</th>
+        <th>Downtime Type</th>
       </tr>
     </thead>
     <tbody id="tableBody">
-      <tr><td colspan="4">Select range and click Generate</td></tr>
+      <tr><td colspan="5">Select range and click Generate</td></tr>
     </tbody>
   </table>
 
@@ -234,7 +235,8 @@ const KEYS = [
   "Downtime_Start_Time",
   "Downtime_End_Time",
   "Downtime_Duration",
-  "Downtime_Description"
+  "Downtime_Description",
+  "Downtime_Type" 
 ];
 
 let allRows = [];
@@ -307,6 +309,9 @@ function renderPage(){
         <td>
           ${r.Downtime_Description || "—"}
           <span class="menu" onclick='openModal(${JSON.stringify(r)})'>⋮</span>
+        </td>
+        <td>
+          ${r.Downtime_Type || "—"}
         </td>
       </tr>
     `;
