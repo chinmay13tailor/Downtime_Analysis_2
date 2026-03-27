@@ -308,10 +308,10 @@ function renderPage(){
         <td>${secToMin(r.Downtime_Duration)}</td>
         <td>
           ${r.Downtime_Description || "—"}
-          <span class="menu" onclick='openModal(${JSON.stringify(r)})'>⋮</span>
         </td>
         <td>
           ${r.Downtime_Type || "—"}
+           <span class="menu" onclick='openModal(${JSON.stringify(r)})'>⋮</span>
         </td>
       </tr>
     `;
