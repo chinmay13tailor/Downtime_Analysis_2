@@ -832,10 +832,9 @@ function renderHeatmap(data){
       const cell = document.createElement("div");
 
       const max = window.globalMaxHeatmap || 1;
-      let intensity = val / max;
 
       // 🔥 boost contrast
-      intensity = Math.pow(intensity, 0.4);
+      intensity = Math.pow(intensity, 0.3);
 
       // limit
       intensity = Math.min(intensity, 1);
