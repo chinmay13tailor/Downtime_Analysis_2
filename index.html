@@ -466,6 +466,12 @@ const reasonMap = {
     "Cleaning / 5S"
   ]
 };
+const heatmapColors = {
+  "ALL": "red",
+  "Unexpected Downtime": "red",
+  "Idle": "blue",
+  "Setup": "yellow"
+};
 
 function handleDateType(){
   document.getElementById("customDate").style.display =
@@ -825,7 +831,19 @@ function renderHeatmap(data){
       cell.style.height = "28px";
       cell.style.borderRadius = "4px";
       cell.style.border = "1px solid #f1f5f9";
-      cell.style.background = `rgba(239,68,68,${0.15 + intensity*0.85})`;
+      let color;
+
+if(colorType === "blue"){
+  color = `rgba(59,130,246, ${intensity})`; // blue
+}
+else if(colorType === "yellow"){
+  color = `rgba(234,179,8, ${intensity})`; // yellow
+}
+else{
+  color = `rgba(239,68,68, ${intensity})`; // red default
+}
+
+cell.style.background = color;
 
       cell.onmouseenter = () => {
   cell.style.transform = "scale(1.1)";
@@ -871,7 +889,8 @@ function renderHeatmapWithFilter(){
   }
 
   const allowedReasons = reasonMap[type] || [];
-
+  const type = document.getElementById("heatmapType").value;
+  const colorType = heatmapColors[type] || "red";
   const data = window.weekDataGlobal;
 
   let filtered = {
