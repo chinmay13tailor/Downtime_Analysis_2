@@ -1348,8 +1348,9 @@ function renderWhatIf(k){
     </div>
   `;
 }
-  function goToEntries(){
-  window.location.href = "Downtime_Reason_Entries.html";
+function goToEntries(){
+  const params = window.location.search; // ?token=xxxx
+  window.location.href = "Downtime_Reason_Entries.html" + params;
 }
 </script>
 
