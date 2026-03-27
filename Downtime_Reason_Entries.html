@@ -95,15 +95,25 @@ th { background: #f1f5f9; }
 <div class="card">
   <h2>Downtime Events</h2>
 
-  <div class="filters">
+<div class="filters" style="justify-content:space-between;">
+
+  <!-- LEFT SIDE -->
+  <div style="display:flex; gap:10px; align-items:center;">
     <select id="range">
-      <option value="24H">Last 24 Hours</option>
+      <option value="24H">Today</option>
       <option value="WEEK">This Week</option>
     </select>
 
     <button onclick="loadDowntime()">Generate</button>
     <span id="status">—</span>
   </div>
+
+  <!-- RIGHT SIDE -->
+  <div>
+    <button onclick="goToMain()">⬅ Back to Dashboard</button>
+  </div>
+
+</div>
 
   <table>
     <thead>
@@ -343,6 +353,10 @@ async function submitUpdate(){
 
   closeModal();
   loadDowntime();
+}
+  function goToMain(){
+  const params = window.location.search; // token preserve
+  window.location.href = "index.html" + params;
 }
 
 </script>
