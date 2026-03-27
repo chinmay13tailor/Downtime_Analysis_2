@@ -835,11 +835,6 @@ function renderHeatmap(data){
 
       // 🔥 boost contrast
       let intensity = val / max;
-      intensity = Math.pow(intensity, 0.3);
-
-      // limit
-      intensity = Math.min(intensity, 1);
-
       cell.style.height = "28px";
       cell.style.borderRadius = "4px";
       cell.style.border = "1px solid #f1f5f9";
