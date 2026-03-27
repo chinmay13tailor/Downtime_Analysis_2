@@ -117,6 +117,63 @@ th{
   cursor:pointer;
   float:right;
 }
+  .modal-box{
+  background:#ffffff;
+  width:420px;
+  margin:6% auto;
+  padding:24px;
+  border-radius:14px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.15);
+  animation:fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(20px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+/* Label styling */
+.modal-label{
+  font-size:13px;
+  color:#64748b;
+  margin-bottom:4px;
+  display:block;
+  font-weight:500;
+}
+
+/* Dropdown modern */
+.modal-select{
+  width:100%;
+  padding:10px 12px;
+  border-radius:8px;
+  border:1px solid #d1d5db;
+  margin-bottom:14px;
+  font-size:14px;
+  transition:0.2s;
+}
+
+.modal-select:focus{
+  border-color:#2563eb;
+  outline:none;
+  box-shadow:0 0 0 2px rgba(37,99,235,0.2);
+}
+
+/* Buttons row */
+.modal-actions{
+  display:flex;
+  gap:10px;
+  margin-top:10px;
+}
+
+/* Secondary button */
+.btn-secondary{
+  background:#e5e7eb;
+  color:#111;
+  border:none;
+  padding:10px 14px;
+  border-radius:8px;
+  cursor:pointer;
+}
 
 </style>
 </head>
@@ -184,26 +241,30 @@ th{
 <div id="editModal" class="modal">
   <div class="modal-box">
 
-    <h3>Edit Downtime Reason</h3>
+    <h3 style="margin-bottom:12px;">Edit Downtime Reason</h3>
 
     <p><b>Start:</b> <span id="mStart"></span></p>
     <p><b>End:</b> <span id="mEnd"></span></p>
     <p><b>Duration:</b> <span id="mDuration"></span> min</p>
 
-<!-- TYPE SELECT -->
-<select id="mType" style="width:100%;margin:10px 0" onchange="updateReasons()">
-  <option value="">Select Type</option>
-  <option value="Idle">Idle</option>
-  <option value="Unexpected Downtime">Unexpected Downtime</option>
-  <option value="Setup">Setup</option>
-</select>
+    <!-- TYPE -->
+    <label class="modal-label">Select Downtime Type</label>
+    <select id="mType" class="modal-select" onchange="updateReasons()">
+      <option value="">Select Type</option>
+      <option value="Idle">Idle</option>
+      <option value="Unexpected Downtime">Unexpected Downtime</option>
+      <option value="Setup">Setup</option>
+    </select>
 
-<!-- REASON SELECT -->
-<select id="mReason" style="width:100%;margin:10px 0">
-</select>
+    <!-- REASON -->
+    <label class="modal-label">Select Downtime Reason</label>
+    <select id="mReason" class="modal-select"></select>
 
-    <button class="btn" onclick="submitUpdate()">Submit</button>
-    <button onclick="closeModal()" style="background:#e5e7eb;color:#000;border:none;padding:10px 14px;border-radius:8px;">Cancel</button>
+    <!-- ACTION BUTTONS -->
+    <div class="modal-actions">
+      <button class="btn" onclick="submitUpdate()">Submit</button>
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>
 
   </div>
 </div>
