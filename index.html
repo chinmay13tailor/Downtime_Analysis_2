@@ -84,16 +84,6 @@ select,input{
 .orange{background:#f59e0b}
 .blue{background:#3b82f6}
 .green{background:#22c55e}
-
-/* TREND */
-.trend{
-  font-size:12px;
-  font-weight:600;
-}
-
-.trend.green{color:#22c55e}
-.trend.red{color:#ef4444}
-
 /* TEXT */
 .kpiTitle{
   font-size:13px;
@@ -258,56 +248,48 @@ select,input{
   <div class="card">
     <div class="topRow">
       <div class="icon red">⏱</div>
-      <div class="trend green">↘</div>
     </div>
     <div class="kpiTitle">Total Downtime</div>
     <div class="kpiValue">
       <span id="kpi-total">--</span>
       <span class="unit">mins</span>
     </div>
-    <div class="sub">vs yesterday</div>
   </div>
 
   <!-- % -->
   <div class="card">
     <div class="topRow">
       <div class="icon blue">%</div>
-      <div class="trend green">↘</div>
     </div>
     <div class="kpiTitle">Downtime %</div>
     <div class="kpiValue">
       <span id="kpi-percent">--</span>
       <span class="unit">%</span>
     </div>
-    <div class="sub">vs yesterday</div>
   </div>
 
   <!-- PRODUCTION -->
   <div class="card">
     <div class="topRow">
       <div class="icon orange">⚙</div>
-      <div class="trend green">↘</div>
     </div>
     <div class="kpiTitle">Production Loss</div>
     <div class="kpiValue">
       <span id="kpi-prod">--</span>
       <span class="unit">nos</span>
     </div>
-    <div class="sub">vs yesterday</div>
   </div>
 
   <!-- ENERGY -->
   <div class="card">
     <div class="topRow">
       <div class="icon orange">⚡</div>
-      <div class="trend green">↘</div>
     </div>
     <div class="kpiTitle">Energy Loss</div>
     <div class="kpiValue">
       <span id="kpi-energy">--</span>
       <span class="unit">kWh</span>
     </div>
-    <div class="sub">vs yesterday</div>
   </div>
 
   <!-- REASON -->
@@ -326,28 +308,24 @@ select,input{
   <div class="card">
     <div class="topRow">
       <div class="icon green">🔧</div>
-      <div class="trend red">↗</div>
     </div>
     <div class="kpiTitle">MTTR</div>
     <div class="kpiValue">
       <span id="kpi-mttr">--</span>
       <span class="unit">mins</span>
     </div>
-    <div class="sub">vs yesterday</div>
   </div>
 
   <!-- MTBF -->
   <div class="card">
     <div class="topRow">
       <div class="icon green">🔄</div>
-      <div class="trend green">↘</div>
     </div>
     <div class="kpiTitle">MTBF</div>
     <div class="kpiValue">
       <span id="kpi-mtbf">--</span>
       <span class="unit">mins</span>
     </div>
-    <div class="sub">vs yesterday</div>
   </div>
 
 </div>
