@@ -343,15 +343,25 @@ select,input{
 
   <!-- HEATMAP -->
   <div class="card" style="width:50%; min-height:360px;">
+<div style="display:flex; justify-content:space-between; align-items:center;">
+
+  <div>
     <div class="kpiTitle" style="font-weight:600;">Hourly Downtime Heatmap</div>
     <div class="sub">Identify peak failure times</div>
-    <div style="margin-top:10px;">
-  <select id="heatmapType" onchange="renderHeatmapWithFilter()">
+  </div>
+
+  <select id="heatmapType" onchange="renderHeatmapWithFilter()" style="
+    padding:6px 10px;
+    border-radius:6px;
+    border:1px solid #d1d5db;
+    font-size:13px;
+  ">
     <option value="ALL">All Types</option>
     <option value="Idle">Idle</option>
     <option value="Unexpected Downtime">Unexpected Downtime</option>
     <option value="Setup">Setup</option>
   </select>
+
 </div>
 
     <div id="heatmapChart"></div>
