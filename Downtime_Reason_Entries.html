@@ -61,7 +61,6 @@ th { background: #f1f5f9; }
   color: #475569;
 }
 
-/* Pagination bottom-right */
 .pagination {
   display: flex;
   justify-content: flex-end;
@@ -73,7 +72,6 @@ th { background: #f1f5f9; }
   align-items: center;
 }
 
-/* Modal */
 .modal {
   display: none;
   position: fixed;
@@ -97,7 +95,6 @@ th { background: #f1f5f9; }
 <div class="card">
   <h2>Downtime Events</h2>
 
-  <!-- TOP FILTERS -->
   <div class="filters">
     <select id="range">
       <option value="24H">Last 24 Hours</option>
@@ -108,7 +105,6 @@ th { background: #f1f5f9; }
     <span id="status">—</span>
   </div>
 
-  <!-- TABLE -->
   <table>
     <thead>
       <tr>
@@ -123,7 +119,6 @@ th { background: #f1f5f9; }
     </tbody>
   </table>
 
-  <!-- PAGINATION (BOTTOM RIGHT) -->
   <div class="pagination">
     <div class="pagination-right">
       <select id="pageSize" onchange="changePageSize()">
@@ -140,7 +135,7 @@ th { background: #f1f5f9; }
 
 </div>
 
-<!-- EDIT MODAL -->
+<!-- MODAL -->
 <div id="editModal" class="modal">
   <div class="modal-box">
     <h3>Edit Downtime Reason</h3>
@@ -168,6 +163,31 @@ th { background: #f1f5f9; }
 </div>
 
 <script>
+
+/* ================= TOKEN FIX ================= */
+
+let JWT = new URLSearchParams(location.search).get("token");
+
+// 👉 ThingsBoard iframe support
+if(!JWT){
+  try{
+    JWT = window.parent.localStorage.getItem("jwt_token");
+  }catch(e){}
+}
+
+// 👉 fallback
+if(!JWT){
+  JWT = localStorage.getItem("jwt");
+}
+
+// 👉 store for reuse
+if(JWT){
+  localStorage.setItem("jwt", JWT);
+}else{
+  console.error("Token not found");
+  document.getElementById("status").textContent = "Token missing ❌";
+}
+
 /* ================= CONFIG ================= */
 const API = "https://plantwiz.pimateck.in/api";
 const DEVICE_ID = "991cf500-661a-11f0-90f1-775fee303094";
@@ -177,96 +197,88 @@ const KEYS = [
   "Downtime_Duration",
   "Downtime_Description"
 ];
-let JWT = new URLSearchParams(location.search).get("token");
 
-// fallback (agar URL me nahi hai)
-if(!JWT){
-  JWT = localStorage.getItem("jwt");
-}
-
-// agar fir bhi nahi mila
-if(!JWT){
-  alert("Token missing! Please open from main dashboard.");
-}
-  if(JWT){
-  localStorage.setItem("jwt", JWT);
-}
-
-/* Pagination state */
 let allRows = [];
 let currentPage = 1;
 let pageSize = 10;
 let selectedTs = null;
 
 /* ================= HELPERS ================= */
-function fmtDate(v) {
-  if (!v) return "—";
+function fmtDate(v){
+  if(!v) return "—";
   return new Date(v.replace(" ", "T")).toLocaleString();
 }
-function secToMin(v) {
-  return Math.round(Number(v || 0) / 60);
+function secToMin(v){
+  return Math.round(Number(v||0)/60);
 }
 
 /* ================= RANGE ================= */
-function getRange() {
+function getRange(){
   const type = range.value;
   const now = Date.now();
 
-  if (type === "24H") return { startTs: now - 86400000, endTs: now };
+  if(type==="24H") return {startTs: now-86400000, endTs: now};
 
-  const d = new Date();
+  const d=new Date();
   d.setHours(0,0,0,0);
-  d.setDate(d.getDate() - d.getDay());
-  return { startTs: d.getTime(), endTs: now };
+  d.setDate(d.getDate()-d.getDay());
+  return {startTs:d.getTime(), endTs:now};
 }
 
-/* ================= LOAD DATA ================= */
-async function loadDowntime() {
-  status.textContent = "Loading...";
-  currentPage = 1;
+/* ================= LOAD ================= */
+async function loadDowntime(){
 
-  const { startTs, endTs } = getRange();
+  if(!JWT){
+    status.textContent = "Token missing ❌";
+    return;
+  }
+
+  status.textContent = "Loading...";
+
+  const {startTs,endTs} = getRange();
+
   const url =
     `${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/values/timeseries` +
     `?keys=${KEYS.join(",")}&startTs=${startTs}&endTs=${endTs}&limit=2000&agg=NONE`;
 
-  const res = await fetch(url, {
-    headers: { "X-Authorization": "Bearer " + JWT }
+  const res = await fetch(url,{
+    headers:{ "X-Authorization":"Bearer "+JWT }
   });
 
-const text = await res.text();
+  const text = await res.text();
 
-let data;
-try{
-  data = JSON.parse(text);
-}catch(e){
-  console.error("API Response Error:", text);
-  status.textContent = "API Error ❌ (Invalid Token)";
-  return;
-}
+  let data;
+  try{
+    data = JSON.parse(text);
+  }catch(e){
+    console.error("API Error:", text);
+    status.textContent = "API Error ❌";
+    return;
+  }
 
   const rows = {};
-  Object.entries(data).forEach(([key, arr]) => {
-    (arr || []).forEach(p => {
-      rows[p.ts] = rows[p.ts] || { ts: p.ts };
+  Object.entries(data).forEach(([key,arr])=>{
+    (arr||[]).forEach(p=>{
+      rows[p.ts] = rows[p.ts] || {ts:p.ts};
       rows[p.ts][key] = p.value;
     });
   });
 
-  allRows = Object.values(rows).sort((a,b) => b.ts - a.ts);
+  allRows = Object.values(rows).sort((a,b)=>b.ts-a.ts);
   renderPage();
+
   status.textContent = "Loaded ✅";
 }
 
-/* ================= RENDER PAGE ================= */
-function renderPage() {
-  tableBody.innerHTML = "";
+/* ================= RENDER ================= */
+function renderPage(){
+  tableBody.innerHTML="";
 
-  const start = (currentPage - 1) * pageSize;
-  const pageRows = allRows.slice(start, start + pageSize);
+  const start=(currentPage-1)*pageSize;
+  const pageRows=allRows.slice(start,start+pageSize);
 
-  pageRows.forEach(r => {
-    tableBody.innerHTML += `
+  pageRows.forEach(r=>{
+    tableBody.innerHTML+=`
       <tr>
         <td>${fmtDate(r.Downtime_Start_Time)}</td>
         <td>${fmtDate(r.Downtime_End_Time)}</td>
@@ -279,64 +291,60 @@ function renderPage() {
     `;
   });
 
-  const totalPages = Math.max(1, Math.ceil(allRows.length / pageSize));
-  pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+  const totalPages=Math.max(1,Math.ceil(allRows.length/pageSize));
+  pageInfo.textContent=`Page ${currentPage} of ${totalPages}`;
 }
 
 /* ================= PAGINATION ================= */
-function nextPage() {
-  const totalPages = Math.ceil(allRows.length / pageSize);
-  if (currentPage < totalPages) {
-    currentPage++;
-    renderPage();
-  }
+function nextPage(){
+  const totalPages=Math.ceil(allRows.length/pageSize);
+  if(currentPage<totalPages){ currentPage++; renderPage(); }
 }
-function prevPage() {
-  if (currentPage > 1) {
-    currentPage--;
-    renderPage();
-  }
+function prevPage(){
+  if(currentPage>1){ currentPage--; renderPage(); }
 }
-function changePageSize() {
-  pageSize = Number(document.getElementById("pageSize").value);
-  currentPage = 1;
+function changePageSize(){
+  pageSize=Number(document.getElementById("pageSize").value);
+  currentPage=1;
   renderPage();
 }
 
 /* ================= MODAL ================= */
-function openModal(row) {
-  selectedTs = row.ts;
+function openModal(row){
+  selectedTs=row.ts;
 
-  mStart.textContent = fmtDate(row.Downtime_Start_Time);
-  mEnd.textContent   = fmtDate(row.Downtime_End_Time);
-  mDuration.textContent = secToMin(row.Downtime_Duration);
-  mReason.value = row.Downtime_Description || "";
+  mStart.textContent=fmtDate(row.Downtime_Start_Time);
+  mEnd.textContent=fmtDate(row.Downtime_End_Time);
+  mDuration.textContent=secToMin(row.Downtime_Duration);
+  mReason.value=row.Downtime_Description || "";
 
-  editModal.style.display = "block";
+  editModal.style.display="block";
 }
-function closeModal() {
-  editModal.style.display = "none";
+function closeModal(){
+  editModal.style.display="none";
 }
 
 /* ================= UPDATE ================= */
-async function submitUpdate() {
-  const payload = [{
-    ts: selectedTs,
-    values: { Downtime_Description: mReason.value }
+async function submitUpdate(){
+
+  const payload=[{
+    ts:selectedTs,
+    values:{ Downtime_Description:mReason.value }
   }];
 
-  await fetch(`${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/timeseries/ANY`, {
-    method: "POST",
-    headers: {
-      "X-Authorization": "Bearer " + JWT,
-      "Content-Type": "application/json"
+  await fetch(`${API}/plugins/telemetry/DEVICE/${DEVICE_ID}/timeseries/ANY`,{
+    method:"POST",
+    headers:{
+      "X-Authorization":"Bearer "+JWT,
+      "Content-Type":"application/json"
     },
-    body: JSON.stringify(payload)
+    body:JSON.stringify(payload)
   });
 
   closeModal();
   loadDowntime();
 }
+
 </script>
 
 </body>
