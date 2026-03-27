@@ -238,7 +238,7 @@ select,input{
 
   </div>
 
-  <button class="btn">+ Add Downtime</button>
+ <button class="btn" onclick="goToEntries()">Downtime Reason Entries</button>
 </div>
 
 <!-- KPI ROW -->
@@ -1347,6 +1347,9 @@ function renderWhatIf(k){
 
     </div>
   `;
+}
+  function goToEntries(){
+  window.location.href = "Downtime_Reason_Entries.html";
 }
 </script>
 
