@@ -847,10 +847,10 @@ if(val === 0){
 else{
 
   let intensity = val / max;
-
-  intensity = Math.pow(intensity, 0.4);
+  intensity = Math.sqrt(intensity);
+  intensity = Math.pow(intensity, 0.6);
   intensity = Math.min(intensity, 1);
-  intensity = 0.15 + (0.85 * intensity);
+  intensity = 0.1 + (0.9 * intensity);
 
   if(colorType === "blue"){
     color = `rgba(59,130,246, ${intensity})`;
